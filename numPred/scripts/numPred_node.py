@@ -7,7 +7,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
 from os.path import realpath, dirname, join
 from numPred.msg import out_msg
-import keras as K
+#import keras as K
 
 class numPredNode(object):
     def __init__(self):
@@ -16,9 +16,10 @@ class numPredNode(object):
 
         print("loading model from"+model_path)
         rospy.init_node('num_predictor',anonymous=True)
-        self.model=K.models.load_model(model_path)
+        self._bridge = CvBridge()
+#        self.model=K.models.load_model(model_path)
         self.pub_num=rospy.Publisher('/numPred/num',out_msg,queue_size=1)
-        self.sub_image=rospy.Subscriber("/armor_detector/num_roi",Image,self.img_callback)
+        self.sub_image=rospy.Subscriber("/armor_detector/armor_roi",Image,self.img_callback)
         print("initialize done")
         rospy.spin()
 
@@ -30,7 +31,9 @@ class numPredNode(object):
         except CvBridgeError as e:
             rospy.logerr(e)
 
-        num=self.pred_number(self,self.current_image)
+        print("~~~~~~~~~~entered call back-~~~~~~~~~~~~")
+        num=self.pred_number(self.current_image)
+        print("output is"+str(num))
         pred_out=out_msg()
         pred_out.num=num
         self.pub_num.publish(pred_out)
@@ -38,6 +41,7 @@ class numPredNode(object):
     def pred_number(self,img):
         testImg_a=np.array(img)
         num=7
+
         # pred=self.model.predict(testImg_a)
         # num = np.argmax(pred)
         return num

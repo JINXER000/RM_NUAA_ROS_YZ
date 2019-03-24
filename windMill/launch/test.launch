@@ -1,8 +1,8 @@
 <launch>
-<param name="video_source" value="/home/nvidia/yzchen_ws/RM_infan_v1/video/red-p.mov"/>
+<param name="video_source" value="/home/yzchen/yzchen_ws/cpp_prj/RM_infan_v1/video/red-p.mov"/>
     <node pkg="windMill" type="windMill_node" name="windMill" output="screen"   />
     <node pkg="video_pub" type="video_pub_node" name="video_pub" respawn="true" />
-    <node pkg="numPred" type="numPred_node.py" name="numPred" output="screen"   />
+    <node pkg="numPred" type="numPred_node.py" name="numPred" output="screen" launch-prefix="xterm -e"  />
     <!--<rosparam command="load" file="$(find edt)/cfg/params.yaml" />-->
 
 </launch>
