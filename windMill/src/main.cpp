@@ -64,7 +64,7 @@ public:
 
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {
-    
+   const clock_t begin_time = clock(); 
     try
     {
       img_src = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8)->image.clone();
@@ -79,14 +79,15 @@ public:
 
     // Update GUI Window
     cv::imshow("detection result", markSensor.img_show);
-    if(!markSensor.img_out.empty())
-      cv::imshow("feed to number", markSensor.img_out);
+//    if(!markSensor.img_out.empty())
+//      cv::imshow("feed to number", markSensor.img_out);
     cv::waitKey(1);
 
     // Output modified video stream
     sensor_msgs::ImagePtr img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor.img_out).toImageMsg();
     img_msg->header.stamp = ros::Time::now();
     image_pub_.publish(img_msg);
+ std::cout <<" node fps: "<< CLOCKS_PER_SEC/float( clock () - begin_time )<<std::endl;
   }
 };
 
