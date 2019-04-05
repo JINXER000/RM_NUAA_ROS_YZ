@@ -1,0 +1,3 @@
+cd ~/yzchen_ws/ros_ws
+source devel/setup.bash
+roslaunch windMill test.launch
