@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
  roscpp
  sensor_msgs
  std_msgs
+# ros_dynamic_test
 )
 find_package( OpenCV REQUIRED )
 catkin_package()

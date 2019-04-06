@@ -97,10 +97,10 @@ public:
     : it_(nh_)
   {
     // Subscrive to input video feed and publish output video feed
-    image_sub_ = it_.subscribe("/camera/image_raw", 1,
-                               &ImageConverter::imageCb, this);
-//    image_sub_ = it_.subscribe("MVCamera/image_raw", 1,
+//    image_sub_ = it_.subscribe("/camera/image_raw", 1,
 //                               &ImageConverter::imageCb, this);
+  image_sub_ = it_.subscribe("/MVCamera/image_raw", 1,
+                              &ImageConverter::imageCb, this);
 
     image_pub_ = it_.advertise("/armor_detector/armor_roi", 1);
     cfg_msgs_ptr=boost::shared_ptr<ros_dynamic_test::dyn_cfg>(new ros_dynamic_test::dyn_cfg());

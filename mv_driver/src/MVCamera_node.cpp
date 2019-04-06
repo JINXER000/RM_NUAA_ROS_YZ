@@ -9,7 +9,8 @@ using namespace std;
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include "MVCamera.h"
-
+#include <std_msgs/Bool.h>
+#include <std_msgs/Int16.h>
 using namespace std;
 using namespace cv;
 
@@ -22,21 +23,25 @@ public:
      Mat rawImg;
   sensor_msgs::ImagePtr msg;
   image_transport::Publisher image_pub_;
-
-  int image_width_, image_height_, framerate_, exposure_, brightness_, contrast_, saturation_, sharpness_, focus_,
+  ros::Subscriber cfg_exp_sub;
+  ros::Subscriber is_large_sub;
+  int image_width_, image_height_, framerate_, exposure_=3000, brightness_, contrast_, saturation_, sharpness_, focus_,
       white_balance_, gain_;
-  bool autofocus_, autoexposure_, auto_white_balance_;
+  bool large_resolution_=true,autofocus_, autoexposure_=false, auto_white_balance_;
 
   MVCamNode():
     node_("~")
   {
     image_transport::ImageTransport it(node_);
-    image_pub_ = it.advertise("MVCamera/image_raw", 1);
+    cfg_exp_sub=node_.subscribe("/mv_param/exp_time",1,&MVCamNode::get_exp,this);
+    is_large_sub=node_.subscribe("/mv_cam/is_large",1,&MVCamNode::get_is_large,this);
+    image_pub_ = it.advertise("/MVCamera/image_raw", 1);
+
 
     MVCamera::Init();
     MVCamera::Play();
-    MVCamera::SetExposureTime(false, 1000);
-    MVCamera::SetLargeResolution(true);
+    MVCamera::SetExposureTime(autoexposure_, exposure_);
+    MVCamera::SetLargeResolution(large_resolution_);
 
     node_.param("image_width", image_width_, 640);
     node_.param("image_height", image_height_, 480);
@@ -46,6 +51,24 @@ public:
   {
     MVCamera::Stop();
     MVCamera::Uninit();
+  }
+
+  void get_exp(const std_msgs::Int16ConstPtr &exp_time)
+  {
+    if(exposure_!=exp_time->data)
+    {
+      exposure_=exp_time->data;
+      MVCamera::SetExposureTime(autoexposure_, exposure_);
+
+    }
+  }
+  void get_is_large(const std_msgs::BoolConstPtr &is_large_resolution)
+  {
+    if(is_large_resolution->data!=large_resolution_)
+    {
+      large_resolution_=is_large_resolution->data;
+      MVCamera::SetLargeResolution(large_resolution_);
+    }
   }
   string num2str(double i)
 
@@ -65,18 +88,9 @@ public:
      }
 //    imshow("raw img from MV cam",rawImg);
 //    waitKey(1);
-//    char key=waitKey(1);
-//    if(key == 's')
-//    {
-//      std::string saveName_src =
-//          num2str(false_idx) + "falsesrc.jpg";
-//      cv::imwrite(saveName_src, rawImg);
-
-//    }
     msg= cv_bridge::CvImage(std_msgs::Header(), "bgr8", rawImg).toImageMsg();
     // publish the image
     image_pub_.publish(msg);
-   printf("MV img published!");
     return true;
   }
 

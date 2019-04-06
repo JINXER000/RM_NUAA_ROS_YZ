@@ -1,0 +1,7 @@
+<launch>
+    <node pkg="ros_dynamic_test" type="dyn_server" name="dyn_server" output="screen"   />
+      <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="screen" />
+    <!--<node pkg="ros_dynamic_test" type="dyn_client" name="dyn_client" output="screen"   />-->
+
+
+</launch>

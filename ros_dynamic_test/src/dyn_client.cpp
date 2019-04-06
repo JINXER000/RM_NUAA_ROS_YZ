@@ -9,34 +9,16 @@
 #include <std_msgs/String.h>
 #include <serial/serial.h>  //ROS已经内置了的串口包
 #include <std_msgs/String.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Int16.h>
 #include "ros_dynamic_test/dyn_cfg.h"
 typedef boost::function<void(const my_msgs::tutorialsConfig &)> CallBack;
 ros_dynamic_test::dyn_cfg cfg_msg;
 ros::Publisher dyn_pub;
-//class dyn_cfg
-//{
-//  ros::NodeHandle node_;
-//  dynamic_reconfigure::Client<my_msgs::tutorialsConfig> client;
-//  ros::Publisher dyn_pub;
-
-//  dyn_cfg():
-//    node_("~")
-//  {
-//    client=dynamic_reconfigure::Client<my_msgs::tutorialsConfig>("dynamic_srv", dynCallBack);
-//    dyn_pub=node_.advertise<ros_dynamic_test::dyn_cfg>("/dyn_cfg",33);
-//  }
-//  void dynCallBack(const my_msgs::tutorialsConfig &data)
-//  {
-//      ROS_INFO("int: %d, double: %f, bool: %d, string: %s", data.int_param, data.double_param,
-//               data.bool_param, data.str_param.c_str());
-//    cfg_msg.bool_param=data.bool_param;
-//    cfg_msg.int_param=data.int_param;
-//    cfg_msg.double_param=data.double_param;
-//    dyn_pub.publish(cfg_msg);
-//  }
-
-
-//};
+ros::Publisher exp_time_pub;
+ros::Publisher is_large_pub;
+std_msgs::Int16 exp_time_msg;
+std_msgs::Bool is_large_msg;
 void dynCallBack(const my_msgs::tutorialsConfig &data)
 {
     ROS_INFO("int: %d, double: %f, bool: %d, string: %s", data.int_param, data.double_param,
@@ -44,7 +26,11 @@ void dynCallBack(const my_msgs::tutorialsConfig &data)
   cfg_msg.bool_param=data.bool_param;
   cfg_msg.int_param=data.int_param;
   cfg_msg.double_param=data.double_param;
+  exp_time_msg.data=data.exp_time;
+  is_large_msg.data=data.is_large_resolution;
   dyn_pub.publish(cfg_msg);
+  exp_time_pub.publish(exp_time_msg);
+  is_large_pub.publish(is_large_msg);
 }
 
 int main(int argc, char **argv)
@@ -54,6 +40,8 @@ int main(int argc, char **argv)
 //    dyn_cfg dyn_node;
     ROS_INFO("Spinning node");
  dyn_pub=node_.advertise<ros_dynamic_test::dyn_cfg>("/dyn_cfg",33);
+ exp_time_pub=node_.advertise<std_msgs::Int16>("/mv_param/exp_time",33);
+ is_large_pub=node_.advertise<std_msgs::Bool>("/mv_cam/is_large",33);
 //    CallBack tmpdata;
     dynamic_reconfigure::Client<my_msgs::tutorialsConfig> client("dynamic_srv", dynCallBack);
 //    my_msgs::tutorialsConfig config;
