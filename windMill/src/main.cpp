@@ -8,7 +8,9 @@
 #include "MarkerSensor.h"
 #include "serial_common/Guard.h"
 #include "ros_dynamic_test/dyn_cfg.h"
-
+#include <geometry_msgs/TransformStamped.h>
+#include <tf/tf.h>
+#define RAD2DEG 57.32
 static const std::string OPENCV_WINDOW = "Image window";
 using namespace std;
 using namespace cv;
@@ -23,6 +25,38 @@ MarkSensor markSensor;
 serial_common::Guard tgt_pos;
 boost::shared_ptr<ros_dynamic_test::dyn_cfg> cfg_msgs_ptr;
 bool is_cfg=0;
+
+struct CamParams
+{
+    int rows, cols;
+    float cx, cy, fx, fy, range;
+    CamParams(int rows_, int cols_,
+                 float cx_,float cy_,
+                 float fx_, float fy_,
+                 float range_):
+        rows(rows_),cols(cols_),
+        cx(cx_),cy(cy_),
+        fx(fx_),fy(fy_),
+        range(range_)
+    {}
+};
+tf::Vector3 calc_XYZ(tfScalar yaw,tfScalar pitch,tfScalar row,float depth,CamParams &sp,cv::Point &pix_2d)
+{
+  tf::Transform trans;
+  tf::Quaternion quat(yaw,pitch,row);
+  trans.setRotation(quat);
+
+  trans.setOrigin(tf::Vector3(0,0,0));
+  tf::Vector3 tmpPt;
+  tmpPt.m_floats[0]=depth;
+  tmpPt.m_floats[1]=-(pix_2d.x-sp.cx)*depth/sp.fx;
+  tmpPt.m_floats[2]=-(pix_2d.y-sp.cy)*depth/sp.fy;
+
+  // to global point
+  tmpPt=trans*tmpPt;
+  return tmpPt;
+}
+
 int frame_process(Mat &srcImg)
 {
 
@@ -65,6 +99,9 @@ public:
     // Subscrive to input video feed and publish output video feed
     image_sub_ = it_.subscribe("/camera/image_raw", 1,
                                &ImageConverter::imageCb, this);
+//    image_sub_ = it_.subscribe("MVCamera/image_raw", 1,
+//                               &ImageConverter::imageCb, this);
+
     image_pub_ = it_.advertise("/armor_detector/armor_roi", 1);
     cfg_msgs_ptr=boost::shared_ptr<ros_dynamic_test::dyn_cfg>(new ros_dynamic_test::dyn_cfg());
     cfg_sub=nh_.subscribe<ros_dynamic_test::dyn_cfg>("/dyn_cfg",1,&ImageConverter::cfg_cb,this);
@@ -97,7 +134,7 @@ public:
     frame_process(img_src);
 
     // Update GUI Window
-    cv::imshow("detection result", markSensor.img_show);
+    cv::imshow("detection result", img_src/*markSensor.img_show*/);
     //    if(!markSensor.img_out.empty())
     //      cv::imshow("feed to number", markSensor.img_out);
     cv::waitKey(1);
@@ -110,6 +147,17 @@ public:
     img_msg->header.stamp = ros::Time::now();
     image_pub_.publish(img_msg);
     std::cout <<" node fps: "<< CLOCKS_PER_SEC/float( clock () - begin_time )<<std::endl;
+
+
+//    std::vector<cv::Point> point_db;
+//    std::vector<tf::Vector3> XYZ_db;
+//    point_db.push_back(cv::Point(654,585));
+//    CamParams cp(480,640,630.52,495.16,871.34,871.59,10);
+//    for(auto &pt:point_db)
+//    {
+//     XYZ_db.push_back(calc_XYZ(0,31.5/RAD2DEG,0,0.49,cp,pt));
+//    }
+//    printf("debug to see XYZ");
   }
 };
 
@@ -117,6 +165,8 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "image_converter");
   ImageConverter ic;
+
+
   ros::spin();
   return 0;
 }

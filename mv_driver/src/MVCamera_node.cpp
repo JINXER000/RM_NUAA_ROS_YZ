@@ -17,7 +17,7 @@ class MVCamNode
 {
 public:
   ros::NodeHandle node_;
-
+    int false_idx=0;
   // shared image message
      Mat rawImg;
   sensor_msgs::ImagePtr msg;
@@ -36,18 +36,24 @@ public:
     MVCamera::Init();
     MVCamera::Play();
     MVCamera::SetExposureTime(false, 1000);
-    MVCamera::SetLargeResolution(false);
+    MVCamera::SetLargeResolution(true);
 
     node_.param("image_width", image_width_, 640);
     node_.param("image_height", image_height_, 480);
-    node_.param("framerate", framerate_, 180);
+    node_.param("framerate", framerate_, 100);
   }
   ~MVCamNode()
   {
     MVCamera::Stop();
     MVCamera::Uninit();
   }
+  string num2str(double i)
 
+  {
+    stringstream ss;
+    ss << i;
+    return ss.str();
+  }
   bool take_and_send_image()
   {
     // grab the image
@@ -59,10 +65,18 @@ public:
      }
 //    imshow("raw img from MV cam",rawImg);
 //    waitKey(1);
+//    char key=waitKey(1);
+//    if(key == 's')
+//    {
+//      std::string saveName_src =
+//          num2str(false_idx) + "falsesrc.jpg";
+//      cv::imwrite(saveName_src, rawImg);
+
+//    }
     msg= cv_bridge::CvImage(std_msgs::Header(), "bgr8", rawImg).toImageMsg();
     // publish the image
     image_pub_.publish(msg);
-
+   printf("MV img published!");
     return true;
   }
 
@@ -85,11 +99,14 @@ public:
 
 
 };
+
 int main(int argc, char **argv)
 {
   ros::init(argc,argv,"MVcamera_node");
 
   MVCamNode mv_node;
+
+
   mv_node.spin();
   return EXIT_SUCCESS;
 

@@ -1,10 +1,9 @@
 <launch>
 <param name="video_source" value="/home/yzchen/CODE/RM/samples/armor/red-p.mov"/>
-    <node pkg="windMill" type="windMill_node" name="windMill" output="screen"   />
+    <node pkg="windMill" type="windMill_node" name="windMill" output="screen"  />
     <node pkg="video_pub" type="video_pub_node" name="video_pub" output="screen" respawn="true" />
     <node pkg="numPred" type="numPred_node.py" name="numPred" output="screen" />
-<!--    <node pkg="mv_driver" type="mv_driver_node" name="mv_driver_node" output="screen" />
-     <node pkg="serial_common" type="serial_common_node" name="serial_common_node" output="screen" />-->
+    <!--     <node pkg="serial_common" type="serial_common_node" name="serial_common_node" output="screen" />-->
     <!--<rosparam command="load" file="$(find edt)/cfg/params.yaml" />-->
 
 </launch>

@@ -1,0 +1,8 @@
+<launch>
+    <node pkg="windMill" type="windMill_node" name="windMill" output="screen"   />
+    <node pkg="numPred" type="numPred_node.py" name="numPred" output="screen" />
+    <node pkg="mv_driver" type="mv_driver_node" name="mv_driver_node" output="screen" launch-prefix="xterm -e gdb"/>
+    <!--     <node pkg="serial_common" type="serial_common_node" name="serial_common_node" output="screen" />-->
+    <!--<rosparam command="load" file="$(find edt)/cfg/params.yaml" />-->
+
+</launch>
