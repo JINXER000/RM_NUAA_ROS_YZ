@@ -1,3 +1,3 @@
-int16 xlocation
-int16 ylocation
+uint8 xlocation
+uint8 ylocation
 int16 depth

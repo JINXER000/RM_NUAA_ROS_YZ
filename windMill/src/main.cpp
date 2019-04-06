@@ -26,37 +26,25 @@ serial_common::Guard tgt_pos;
 boost::shared_ptr<ros_dynamic_test::dyn_cfg> cfg_msgs_ptr;
 bool is_cfg=0;
 
-struct CamParams
+struct AlgoriParam
 {
-    int rows, cols;
-    float cx, cy, fx, fy, range;
-    CamParams(int rows_, int cols_,
-                 float cx_,float cy_,
-                 float fx_, float fy_,
-                 float range_):
-        rows(rows_),cols(cols_),
-        cx(cx_),cy(cy_),
-        fx(fx_),fy(fy_),
-        range(range_)
-    {}
+  bool is_red;
+  int  h_min,h_max,s_min,s_max,v_min,v_max;
+
+
+  AlgoriParam(bool is_red_,
+              int  h_min_,
+              int h_max_,
+              int s_min_,
+              int s_max_,
+              int v_min_,
+              int v_max_):is_red(is_red_),
+    h_min(h_min_),h_max(h_max_),s_min(s_min_),
+    s_max(s_max_),v_min(v_min_),v_max(v_max_)
+  {
+
+  }
 };
-tf::Vector3 calc_XYZ(tfScalar yaw,tfScalar pitch,tfScalar row,float depth,CamParams &sp,cv::Point &pix_2d)
-{
-  tf::Transform trans;
-  tf::Quaternion quat(yaw,pitch,row);
-  trans.setRotation(quat);
-
-  trans.setOrigin(tf::Vector3(0,0,0));
-  tf::Vector3 tmpPt;
-  tmpPt.m_floats[0]=depth;
-  tmpPt.m_floats[1]=-(pix_2d.x-sp.cx)*depth/sp.fx;
-  tmpPt.m_floats[2]=-(pix_2d.y-sp.cy)*depth/sp.fy;
-
-  // to global point
-  tmpPt=trans*tmpPt;
-  return tmpPt;
-}
-
 int frame_process(Mat &srcImg)
 {
 
@@ -71,8 +59,8 @@ int frame_process(Mat &srcImg)
     cout << "detected target--------------" << endl;
     X_bias = pix_x - bgrImg.cols/2;
     Y_bias = pix_y - bgrImg.rows/2;
-    tgt_pos.xlocation=X_bias;
-    tgt_pos.ylocation=Y_bias;
+    tgt_pos.xlocation=pix_x;
+    tgt_pos.ylocation=pix_y;
   }else
   {
     status=0;
@@ -134,7 +122,7 @@ public:
     frame_process(img_src);
 
     // Update GUI Window
-    cv::imshow("detection result", img_src/*markSensor.img_show*/);
+    cv::imshow("detection result", markSensor.img_show);
     //    if(!markSensor.img_out.empty())
     //      cv::imshow("feed to number", markSensor.img_out);
     cv::waitKey(1);
@@ -149,15 +137,6 @@ public:
     std::cout <<" node fps: "<< CLOCKS_PER_SEC/float( clock () - begin_time )<<std::endl;
 
 
-//    std::vector<cv::Point> point_db;
-//    std::vector<tf::Vector3> XYZ_db;
-//    point_db.push_back(cv::Point(654,585));
-//    CamParams cp(480,640,630.52,495.16,871.34,871.59,10);
-//    for(auto &pt:point_db)
-//    {
-//     XYZ_db.push_back(calc_XYZ(0,31.5/RAD2DEG,0,0.49,cp,pt));
-//    }
-//    printf("debug to see XYZ");
   }
 };
 

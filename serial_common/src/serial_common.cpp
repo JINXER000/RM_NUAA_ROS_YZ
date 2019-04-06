@@ -68,7 +68,7 @@ void write_callback(const serial_common::Guard::ConstPtr& msg)
   Buffer[DATA_LEN - 1] = Add_CRC(Buffer, DATA_LEN - 1);
 
   ser.write(Buffer,DATA_LEN);   //发送串口数据
-
+  printf("debug here");
 }
 #endif
 
