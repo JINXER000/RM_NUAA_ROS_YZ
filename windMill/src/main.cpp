@@ -139,7 +139,12 @@ public:
         cv::imshow("detection result", markSensor->img_show);
         //    if(!markSensor.img_out.empty())
         //      cv::imshow("feed to number", markSensor.img_out);
-        cv::waitKey(1);
+        char key=cv::waitKey(1);
+        if(key=='q' ||key=='Q')
+        {
+            //send SIGINT
+            system("pkill roslaunch");
+        }
 
     }
 

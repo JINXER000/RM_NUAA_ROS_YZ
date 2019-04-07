@@ -93,7 +93,7 @@ int main (int argc, char** argv)
   try
   {
     //设置串口属性，并打开串口
-    ser.setPort("/dev/ttyUSB0");
+    ser.setPort("/dev/ttyUSB1");
     ser.setBaudrate(115200);
     serial::Timeout to = serial::Timeout::simpleTimeout(1000);
     ser.setTimeout(to);
@@ -102,7 +102,9 @@ int main (int argc, char** argv)
   catch (serial::IOException& e)
   {
     ROS_ERROR_STREAM("Unable to open port ");
-    return -1;
+//    return -1;
+      ser.setPort("/dev/ttyUSB0");
+         ser.open();
   }
   //检测串口是否已经打开，并给出提示信息
   if(ser.isOpen())
