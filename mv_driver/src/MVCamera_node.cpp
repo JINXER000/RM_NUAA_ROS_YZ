@@ -34,7 +34,7 @@ public:
   {
     image_transport::ImageTransport it(node_);
     cfg_exp_sub=node_.subscribe("/mv_param/exp_time",1,&MVCamNode::get_exp,this);
-    is_large_sub=node_.subscribe("/mv_cam/is_large",1,&MVCamNode::get_is_large,this);
+    is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);
     image_pub_ = it.advertise("/MVCamera/image_raw", 1);
 
 

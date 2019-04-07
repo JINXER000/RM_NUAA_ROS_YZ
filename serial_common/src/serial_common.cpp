@@ -62,13 +62,13 @@ void write_callback(const serial_common::Guard::ConstPtr& msg)
   Buffer[0] = 0xFF;
   Buffer[1]=DATA_LEN;
   Buffer[2]=0x02;
-  Data_disintegrate(msg->xlocation, &Buffer[3], &Buffer[4]);
-  Data_disintegrate(msg->ylocation, &Buffer[5], &Buffer[6]);
+  Data_disintegrate((unsigned int)msg->xlocation, &Buffer[3], &Buffer[4]);
+  Data_disintegrate((unsigned int)msg->ylocation, &Buffer[5], &Buffer[6]);
   //
   Buffer[DATA_LEN - 1] = Add_CRC(Buffer, DATA_LEN - 1);
 
   ser.write(Buffer,DATA_LEN);   //发送串口数据
-  printf("debug here");
+  printf("got location:: (%d,  %d )\n",msg->xlocation,msg->ylocation);
 }
 #endif
 

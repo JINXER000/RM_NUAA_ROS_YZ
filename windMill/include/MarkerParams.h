@@ -1,6 +1,4 @@
-//
-// Created by liming on 12/26/17.
-//
+
 
 #ifndef HSVDETECT_MARKERPARAMS_H
 #define HSVDETECT_MARKERPARAMS_H
@@ -12,6 +10,41 @@
 
 using namespace std;
 
+
+struct AlgoriParam
+{
+  bool is_red;
+  int  h_min,h_max,s_min,s_max,v_min,v_max;
+
+
+  AlgoriParam(bool is_red_,
+              int  h_min_,
+              int h_max_,
+              int s_min_,
+              int s_max_,
+              int v_min_,
+              int v_max_):is_red(is_red_),
+    h_min(h_min_),h_max(h_max_),s_min(s_min_),
+    s_max(s_max_),v_min(v_min_),v_max(v_max_)
+  {
+
+  }
+};
+
+struct CamParams
+{
+    int rows, cols,fps;
+    float cx, cy, fx, fy;
+    CamParams(int rows_, int cols_,
+                 float cx_,float cy_,
+                 float fx_, float fy_,
+                 int fps_):
+        rows(rows_),cols(cols_),
+        cx(cx_),cy(cy_),
+        fx(fx_),fy(fy_),
+        fps(fps_)
+    {}
+};
 class MarkerParams {
 public:
 

@@ -1,3 +1,13 @@
 cd ~/yzchen_ws/ros_ws
+catkin_make --pkg serial_common
+catkin_make --pkg ros_dynamic_test
+catkin_make
 source devel/setup.bash
-roslaunch windMill test.launch
+roslaunch windMill MV_cam.launch
+source devel/setup.bash
+rosrun ros_dynamic_test dyn_server
+source devel/setup.bash
+rosrun ros_dynamic_test dyn_client
+source devel/setup.bash
+rosrun rqt_reconfigure rqt_reconfigure
+

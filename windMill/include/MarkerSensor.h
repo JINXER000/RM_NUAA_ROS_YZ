@@ -100,7 +100,7 @@ public :
 		RED = 1,
 		BLUE=2
 	};
-	MarkSensor() = default;
+  MarkSensor(AlgoriParam &ap_,CamParams &cp_);
 	//MarkSensor(const string & calibration, const string & config, const string & cascade);
 	int ProcessFrameLEDXYZ(const Mat & img, float & X, float & Y, float & Z, int &type, int &pix_x, int &pix_y);
 	int DetectLEDMarker(const Mat &img, Marker &res_marker);
@@ -117,7 +117,9 @@ public :
 
 	int GammaCorrect();
 
-	SensorStatus status= STATUS_DETECTING;
+  AlgoriParam ap;
+  CamParams cp;
+  SensorStatus status= STATUS_DETECTING;
 	Marker marker;
 	Mat img_gray, img_bgr, img_hsv, img_h, led_mask,img_out;
 	static Mat img_show,ROI_show;

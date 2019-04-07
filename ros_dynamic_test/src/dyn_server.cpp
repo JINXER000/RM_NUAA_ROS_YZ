@@ -7,7 +7,7 @@ void callback(my_msgs::tutorialsConfig &config, uint32_t level)
     ROS_INFO("Reconfigure Request: %d %f %s %s %d",
               config.int_param, config.double_param,
               config.str_param.c_str(),
-              config.bool_param?"True":"False",
+              config.is_show_img?"True":"False",
               config.size);
 }
 

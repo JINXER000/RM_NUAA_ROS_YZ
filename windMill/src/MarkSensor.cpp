@@ -4,6 +4,12 @@
 Mat MarkSensor::img_show, MarkSensor::ROI_show;
 using namespace cv;
 using namespace std;
+
+MarkSensor::MarkSensor(AlgoriParam &ap_,CamParams &cp_):
+  ap(ap_),cp(cp_)
+{
+
+}
 void limitRect(Rect &location, Size sz)
 {
 	Rect window(Point(0, 0), sz);
@@ -212,18 +218,8 @@ int MarkSensor::DetectLEDMarker(const Mat &img, Marker &res_marker)
 	img.copyTo(img_hsv);
 	/*actually we use bgr*/
 
-	if (MarkerParams::target_color == 1) {
-		cv::inRange(img_hsv, cv::Scalar(MarkerParams::red_hmin, MarkerParams::smin, MarkerParams::vmin),
-			cv::Scalar(MarkerParams::red_hmax, MarkerParams::smax, MarkerParams::vmax), led_mask);
-	}
-	else if (MarkerParams::target_color == 2) {
-		cv::inRange(img_hsv, cv::Scalar(MarkerParams::blue_hmin, MarkerParams::smin, MarkerParams::vmin),
-			cv::Scalar(MarkerParams::blue_hmax, MarkerParams::smax, MarkerParams::vmax), led_mask);
-	}
-	else {
-		cv::inRange(img_hsv, cv::Scalar(MarkerParams::hmin, MarkerParams::smin, MarkerParams::vmin),
-			cv::Scalar(MarkerParams::hmax, MarkerParams::smax, MarkerParams::vmax), led_mask);
-	}
+	cv::inRange(img_hsv,cv::Scalar(ap.h_min,ap.s_min,ap.v_min),cv::Scalar(ap.h_max,ap.s_max,ap.v_max),led_mask);
+
 	//Mat led_erode;
 	//Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
 	//morphologyEx(led_mask, led_erode, MORPH_ERODE, element, Point(-1, -1), 1);
@@ -259,18 +255,9 @@ if (ROI_bgr.empty())
 	status = STATUS_DETECTING;
 	return -1;
 }
-if (MarkerParams::target_color == 1) {
-	cv::inRange(ROI_bgr, cv::Scalar(MarkerParams::red_hmin, MarkerParams::smin, MarkerParams::vmin),
-		cv::Scalar(MarkerParams::red_hmax, MarkerParams::smax, MarkerParams::vmax), ROI_led_mask);
-}
-else if (MarkerParams::target_color == 2) {
-	cv::inRange(ROI_bgr, cv::Scalar(MarkerParams::blue_hmin, MarkerParams::smin, MarkerParams::vmin),
-		cv::Scalar(MarkerParams::blue_hmax, MarkerParams::smax, MarkerParams::vmax), ROI_led_mask);
-}
-else {
-	cv::inRange(ROI_bgr, cv::Scalar(MarkerParams::hmin, MarkerParams::smin, MarkerParams::vmin),
-		cv::Scalar(MarkerParams::hmax, MarkerParams::smax, MarkerParams::vmax), ROI_led_mask);
-}
+cv::inRange(ROI_bgr,cv::Scalar(ap.h_min,ap.s_min,ap.v_min),cv::Scalar(ap.h_max,ap.s_max,ap.v_max),ROI_led_mask);
+
+
 /// Get Marker
 if (GetLEDMarker(ROI_led_mask, res_marker) != STATUS_SUCCESS) {
 	printf("Get no marker!\n");

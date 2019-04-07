@@ -1,6 +1,3 @@
-//
-// Created by liming on 12/26/17.
-//
 
 #include "MarkerParams.h"
 

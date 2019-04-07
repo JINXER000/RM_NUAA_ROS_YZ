@@ -22,13 +22,15 @@ std_msgs::Bool is_large_msg;
 void dynCallBack(const my_msgs::tutorialsConfig &data)
 {
     ROS_INFO("int: %d, double: %f, bool: %d, string: %s", data.int_param, data.double_param,
-             data.bool_param, data.str_param.c_str());
-  cfg_msg.bool_param=data.bool_param;
+             data.is_show_img, data.str_param.c_str());
+  cfg_msg.is_show_img=data.is_show_img;
   cfg_msg.int_param=data.int_param;
   cfg_msg.double_param=data.double_param;
   cfg_msg.is_red=data.is_red;
-  cfg_msg.h_min=data.h_min;
-  cfg_msg.h_max=data.h_max;
+  cfg_msg.h_min_r=data.h_min_r;
+  cfg_msg.h_max_r=data.h_max_r;
+  cfg_msg.h_min_b=data.h_min_b;
+  cfg_msg.h_max_b=data.h_max_b;
   cfg_msg.s_min=data.s_min;
   cfg_msg.s_max=data.s_max;
   cfg_msg.v_min=data.v_min;
@@ -49,7 +51,7 @@ int main(int argc, char **argv)
     ROS_INFO("Spinning node");
  dyn_pub=node_.advertise<ros_dynamic_test::dyn_cfg>("/dyn_cfg",33);
  exp_time_pub=node_.advertise<std_msgs::Int16>("/mv_param/exp_time",33);
- is_large_pub=node_.advertise<std_msgs::Bool>("/mv_cam/is_large",33);
+ is_large_pub=node_.advertise<std_msgs::Bool>("/mv_param/is_large",33);
 //    CallBack tmpdata;
     dynamic_reconfigure::Client<my_msgs::tutorialsConfig> client("dynamic_srv", dynCallBack);
 //    my_msgs::tutorialsConfig config;
@@ -60,20 +62,7 @@ int main(int argc, char **argv)
 //    int c = 0;
     while (ros::ok())
     {
-//        c++;
-//        static bool ret = true;
-//        static int cnt = 0;
-//        if(!(c%10))
-//        {
-//            config.bool_param = !ret;
-//            config.int_param = cnt;
-//            config.double_param = 1/((double)(cnt+1));
-//            client.setConfiguration(config);
-//            cnt++;
-//            ret = !ret;
-//            if(cnt > 10)
-//                cnt = 0;
-//        }
+
 
         ros::spinOnce();
         loop_rate.sleep();
