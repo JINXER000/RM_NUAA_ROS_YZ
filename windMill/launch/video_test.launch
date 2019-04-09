@@ -1,6 +1,6 @@
 <launch>
-<param name="video_source" value="/home/yzchen/CODE/RM/samples/armor/red-p.mov"/>
-    <node pkg="windMill" type="windMill_node" name="windMill" output="screen"  >
+<param name="video_source" value="/home/nvidia/yzchen_ws/videos/red-p.mov"/>
+    <node pkg="windMill" type="windMill_node" name="windMill" output="screen" >
         <remap from="/MVCamera/image_raw" to ="/camera/image_raw"/>
      </node>
     <node pkg="video_pub" type="video_pub_node" name="video_pub" output="screen" respawn="true" />

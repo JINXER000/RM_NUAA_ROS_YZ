@@ -11,6 +11,7 @@ using namespace std;
 #include "MVCamera.h"
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int16.h>
+#include "video_saver.h"
 using namespace std;
 using namespace cv;
 
@@ -25,9 +26,11 @@ public:
   image_transport::Publisher image_pub_;
   ros::Subscriber cfg_exp_sub;
   ros::Subscriber is_large_sub;
+    ros::Subscriber is_rcd_sub;
   int image_width_, image_height_, framerate_, exposure_=3000, brightness_, contrast_, saturation_, sharpness_, focus_,
       white_balance_, gain_;
-  bool large_resolution_=true,autofocus_, autoexposure_=false, auto_white_balance_;
+  bool large_resolution_=true,is_record_=false,autofocus_, autoexposure_=false, auto_white_balance_;
+  VideoSaver saver;
 
   MVCamNode():
     node_("~")
@@ -35,6 +38,7 @@ public:
     image_transport::ImageTransport it(node_);
     cfg_exp_sub=node_.subscribe("/mv_param/exp_time",1,&MVCamNode::get_exp,this);
     is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);
+    is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
     image_pub_ = it.advertise("/MVCamera/image_raw", 1);
 
 
@@ -42,7 +46,6 @@ public:
     MVCamera::Play();
     MVCamera::SetExposureTime(autoexposure_, exposure_);
     MVCamera::SetLargeResolution(large_resolution_);
-
     node_.param("image_width", image_width_, 640);
     node_.param("image_height", image_height_, 480);
     node_.param("framerate", framerate_, 100);
@@ -70,6 +73,14 @@ public:
       MVCamera::SetLargeResolution(large_resolution_);
     }
   }
+  void get_is_rcd(const std_msgs::BoolConstPtr &is_rcd)
+  {
+    if(is_record_!=is_rcd->data)
+    {
+      is_record_=is_rcd->data;
+
+    }
+  }
   string num2str(double i)
 
   {
@@ -85,6 +96,10 @@ public:
      {
        ROS_WARN("NO IMG GOT FROM MV");
        return false;
+     }
+     if(is_record_)
+     {
+       saver.write(rawImg);
      }
 //    imshow("raw img from MV cam",rawImg);
 //    waitKey(1);

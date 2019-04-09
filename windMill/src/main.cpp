@@ -8,6 +8,7 @@
 #include "MarkerSensor.h"
 #include "serial_common/Guard.h"
 #include "ros_dynamic_test/dyn_cfg.h"
+#include "std_msgs/String.h"
 #include <geometry_msgs/TransformStamped.h>
 #include <tf/tf.h>
 #define RAD2DEG 57.32
@@ -23,7 +24,7 @@ float X = 0, Y = 0, Z = 0;
 int led_type = 0,  frameCnt = 0, capIdx = 1;
 MarkSensor *markSensor=NULL;
 serial_common::Guard tgt_pos;
-
+bool is_windMill_mode=0;
 
 int frame_process(Mat &srcImg)
 {
@@ -57,8 +58,9 @@ class ImageConverter
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;
   image_transport::Publisher image_pub_;
-  ros::Publisher serial_sub;
+  ros::Publisher serial_pub;
   ros::Subscriber cfg_sub;
+  ros::Subscriber WM_activator_sub;
 
   bool is_red;
   int  h_min,h_max,s_min,s_max,v_min,v_max;
@@ -98,14 +100,31 @@ public:
 
     image_sub_ = it_.subscribe("/MVCamera/image_raw", 1,
                               &ImageConverter::imageCb, this);
+    cfg_sub=nh_.subscribe<ros_dynamic_test::dyn_cfg>("/dyn_cfg",1,&ImageConverter::cfg_cb,this);
+    WM_activator_sub=nh_.subscribe<std_msgs::String>("/serial/read",1,&ImageConverter::WM_cb,this);
 
     image_pub_ = it_.advertise("/armor_detector/armor_roi", 1);
-    cfg_sub=nh_.subscribe<ros_dynamic_test::dyn_cfg>("/dyn_cfg",1,&ImageConverter::cfg_cb,this);
-    serial_sub=nh_.advertise<serial_common::Guard>("write",20);
+    serial_pub=nh_.advertise<serial_common::Guard>("write",20);
   }
 
   ~ImageConverter()
   {
+  }
+  void WM_cb(const std_msgs::StringConstPtr &msg)
+  {
+      unsigned char mode_normal=0x00;
+      unsigned char mode_windMill=0x01;
+      ROS_INFO_STREAM("Read: " << msg->data);
+      if(msg->data[0]==mode_normal)
+      {
+          is_windMill_mode=0;
+      }
+      else if(msg->data[0]==mode_windMill)
+      {
+          ROS_WARN("debug: in windmill mode");
+          is_windMill_mode=1;
+
+      }
   }
   void cfg_cb(const ros_dynamic_test::dyn_cfgConstPtr &msg)
   {
@@ -132,7 +151,13 @@ public:
       return;
     }
 
-    frame_process(img_src);
+    if(is_windMill_mode)   // strike wind mill
+    {
+        img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
+    }else   //normal
+    {
+        frame_process(img_src);
+    }
     // Update GUI Window
     if(MarkerParams::ifShow)
     {
@@ -151,7 +176,7 @@ public:
     if(status==1)
     {
 
-      serial_sub.publish(tgt_pos);
+      serial_pub.publish(tgt_pos);
     }
     // Output modified video stream
     sensor_msgs::ImagePtr img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_out).toImageMsg();

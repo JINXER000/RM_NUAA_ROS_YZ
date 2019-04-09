@@ -25,7 +25,7 @@ int main(int argc, char **argv)
   ros::init(argc,argv,"video_publisher");
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);//发布图片需要用到image_transport
-  image_transport::Publisher pub = it.advertise("camera/image_raw", 1);
+  image_transport::Publisher pub = it.advertise("/camera/image_raw", 1);
  
   nh.getParam("/video_source",video_source);
 
