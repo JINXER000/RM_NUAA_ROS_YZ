@@ -34,15 +34,15 @@ struct AlgoriParam
 struct CamParams
 {
     int rows, cols,fps;
-    float cx, cy, fx, fy;
-    CamParams(int rows_, int cols_,
+    float cx, cy, fx, fy,distcoef1,distcoef2;
+    CamParams(int rows_, int cols_,int fps_,
                  float cx_,float cy_,
                  float fx_, float fy_,
-                 int fps_):
+                 float distcoef1_,float distcoef2_ ):
         rows(rows_),cols(cols_),
         cx(cx_),cy(cy_),
         fx(fx_),fy(fy_),
-        fps(fps_)
+        fps(fps_),distcoef1(distcoef1_),distcoef2(distcoef2_)
     {}
 };
 class MarkerParams {

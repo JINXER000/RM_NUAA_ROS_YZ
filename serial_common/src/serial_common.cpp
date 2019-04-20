@@ -11,14 +11,14 @@
 #include <serial/serial.h>  //ROS已经内置了的串口包
 #include <std_msgs/String.h>
 #include "Serial_common_config.h"
-
+#include <stdlib.h>
 #ifdef INFRANTRY_MODE
 #include <serial_common/Infantry.h>
 #endif
 #ifdef GUARD_MODE
 #include <serial_common/Guard.h>
 #endif
-#define DATA_LEN 8
+#define DATA_LEN 14
 serial::Serial ser; //声明串口对象
 
 
@@ -64,7 +64,9 @@ void write_callback(const serial_common::Guard::ConstPtr& msg)
     Buffer[2]=0x02;
     Data_disintegrate((unsigned int)msg->xlocation, &Buffer[3], &Buffer[4]);
     Data_disintegrate((unsigned int)msg->ylocation, &Buffer[5], &Buffer[6]);
-    //
+    Data_disintegrate((unsigned int)msg->depth, &Buffer[7], &Buffer[8]);
+    Data_disintegrate((unsigned int)msg->angX, &Buffer[9], &Buffer[10]);
+    Data_disintegrate((unsigned int)msg->angY, &Buffer[11], &Buffer[12]);
     Buffer[DATA_LEN - 1] = Add_CRC(Buffer, DATA_LEN - 1);
 
     ser.write(Buffer,DATA_LEN);   //发送串口数据
@@ -91,15 +93,29 @@ int main (int argc, char** argv)
 #endif
 
     //设置串口属性，并打开串口
-    ser.setPort("/dev/ttyUSB0");
-    ser.setBaudrate(115200);
-    serial::Timeout to = serial::Timeout::simpleTimeout(1000);
-    ser.setTimeout(to);
-    ser.open();
-    if(!ser.isOpen())
+    const char *usb_ttl=getenv("usb_ttl");
+    if(usb_ttl==NULL)
     {
-        ser.setPort("/dev/ttyUSB1");
-        ser.open();
+      ser.setPort("/dev/ttyUSB0");
+      ser.setBaudrate(115200);
+      serial::Timeout to = serial::Timeout::simpleTimeout(1000);
+      ser.setTimeout(to);
+      ser.open();
+      ROS_WARN_STREAM("SYSTEM USB NOT DETECTED");
+      if(!ser.isOpen())
+      {
+          ser.setPort("/dev/ttyUSB1");
+          ser.open();
+      }
+    }else
+    {
+      ROS_WARN_STREAM("usb name is"<<usb_ttl);
+      ser.setPort(usb_ttl);
+      ser.setBaudrate(115200);
+      serial::Timeout to = serial::Timeout::simpleTimeout(1000);
+      ser.setTimeout(to);
+      ser.open();
+
     }
     //检测串口是否已经打开，并给出提示信息
     if(ser.isOpen())

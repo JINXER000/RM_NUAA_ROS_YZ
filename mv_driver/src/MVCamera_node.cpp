@@ -27,7 +27,7 @@ public:
   ros::Subscriber cfg_exp_sub;
   ros::Subscriber is_large_sub;
     ros::Subscriber is_rcd_sub;
-  int image_width_, image_height_, framerate_, exposure_=3000, brightness_, contrast_, saturation_, sharpness_, focus_,
+  int image_width_, image_height_, framerate_, exposure_=7000, brightness_, contrast_, saturation_, sharpness_, focus_,
       white_balance_, gain_;
   bool large_resolution_=true,is_record_=false,autofocus_, autoexposure_=false, auto_white_balance_;
   VideoSaver saver;
@@ -49,6 +49,7 @@ public:
     node_.param("image_width", image_width_, 640);
     node_.param("image_height", image_height_, 480);
     node_.param("framerate", framerate_, 100);
+    node_.getParam("/is_record", is_record_);
   }
   ~MVCamNode()
   {

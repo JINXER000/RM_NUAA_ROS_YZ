@@ -11,7 +11,6 @@
 #include "std_msgs/String.h"
 #include <geometry_msgs/TransformStamped.h>
 #include <tf/tf.h>
-#define RAD2DEG 57.32
 static const std::string OPENCV_WINDOW = "Image window";
 using namespace std;
 using namespace cv;
@@ -20,7 +19,7 @@ Size dist_size = Size(640, 480);
 int X_bias, Y_bias, pix_x, pix_y;
 int status=0,lastStatus=0;
 bool isSuccess = 0;
-float X = 0, Y = 0, Z = 0;
+float angX = 0, angY = 0, Z = 0;
 int led_type = 0,  frameCnt = 0, capIdx = 1;
 MarkSensor *markSensor=NULL;
 serial_common::Guard tgt_pos;
@@ -33,15 +32,17 @@ int frame_process(Mat &srcImg)
   /// detect and track
   resize(srcImg, bgrImg, dist_size);
   // bgrImg=srcImg.clone();
-  isSuccess = markSensor->ProcessFrameLEDXYZ(bgrImg, X, Y, Z, led_type,
+  isSuccess = markSensor->ProcessFrameLEDXYZ(bgrImg, angX, angY, Z, led_type,
                                             pix_x, pix_y);
   if (!isSuccess) {
     status = 1;
-    cout << "detected target--------------" << endl;
     X_bias = pix_x - bgrImg.cols/2;
     Y_bias = pix_y - bgrImg.rows/2;
     tgt_pos.xlocation=pix_x;
     tgt_pos.ylocation=pix_y;
+    tgt_pos.depth=Z;
+    tgt_pos.angX=angX;
+    tgt_pos.angY=angY;
     std::cout<<"target pix::  "<<pix_x<<","<<pix_y<<std::endl;
   }else
   {
@@ -65,7 +66,7 @@ class ImageConverter
   bool is_red;
   int  h_min,h_max,s_min,s_max,v_min,v_max;
   int rows=480, cols=640,fps=120;
-  float cx, cy, fx, fy;
+  float cx, cy, fx, fy,distcoef1,distcoef2;
 
 
 public:
@@ -91,9 +92,11 @@ public:
     nh_.getParam("/CameraParams/cy",cy);
     nh_.getParam("/CameraParams/fx",fx);
     nh_.getParam("/CameraParams/fy",fy);
-
+    nh_.getParam("/CameraParams/distcoef1",distcoef1);
+    nh_.getParam("/CameraParams/distcoef2",distcoef2);
+    nh_.getParam("/ifshow",MarkerParams::ifShow);
     AlgoriParam ap(is_red,h_min,h_max,s_min,s_max,v_min,v_max);
-    CamParams cp(rows,cols,cx,cy,fx,fy,fps);
+    CamParams cp(rows,cols,fps,cx,cy,fx,fy,distcoef1,distcoef2);
 
     markSensor=new MarkSensor(ap,cp);
     // Subscrive to input video feed and publish output video feed
@@ -136,7 +139,7 @@ public:
       markSensor->ap=AlgoriParam(msg->is_red,msg->h_min_b,msg->h_max_b,
                                msg->s_min,msg->s_max,msg->v_min,
                                msg->v_max);
-    MarkerParams::ifShow=msg->is_show_img;
+//    MarkerParams::ifShow=msg->is_show_img;
   }
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {

@@ -5,9 +5,34 @@ Mat MarkSensor::img_show, MarkSensor::ROI_show;
 using namespace cv;
 using namespace std;
 
+
+int Marker::ComputeKeyPoints()
+{
+  bool is_led0_left=(LEDs[1].center.x-LEDs[0].center.x)>0;
+  int is_dir0_down=(LEDs[0].dir.dot(Point2f(0,1)))>0?1:-1;
+  int is_dir1_down=(LEDs[1].dir.dot(Point2f(0,1)))>0?1:-1;
+  if(is_led0_left)
+  {
+      kpts[0]=LEDs[0].center -is_dir0_down* LEDs[0].dir*LEDs[0].width*0.5f;
+      kpts[2]=LEDs[0].center + is_dir0_down*LEDs[0].dir*LEDs[0].width*0.5f;
+      kpts[1]=LEDs[1].center - is_dir1_down*LEDs[1].dir*LEDs[1].width*0.5f;
+      kpts[3]=LEDs[1].center + is_dir1_down*LEDs[1].dir*LEDs[1].width*0.5f;
+  }else
+  {
+    kpts[0]=LEDs[1].center -is_dir0_down* LEDs[1].dir*LEDs[1].width*0.5f;
+    kpts[2]=LEDs[1].center + is_dir0_down*LEDs[1].dir*LEDs[1].width*0.5f;
+    kpts[1]=LEDs[0].center - is_dir1_down*LEDs[0].dir*LEDs[0].width*0.5f;
+    kpts[3]=LEDs[0].center + is_dir1_down*LEDs[0].dir*LEDs[0].width*0.5f;
+  }
+
+  return 0;
+}
+
 MarkSensor::MarkSensor(AlgoriParam &ap_,CamParams &cp_):
   ap(ap_),cp(cp_)
 {
+cameraMatrix = (cv::Mat_<double>(3,3) << cp.fx, 0, cp.cx, 0, cp.fy, cp.cy, 0, 0, 1);
+ distCoeffs = (Mat_<double>(1,4) <<cp.distcoef1, cp.distcoef2, 0, 0);
 
 }
 void limitRect(Rect &location, Size sz)
@@ -185,7 +210,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 	for (int i = 0; i < markers.size(); i++) {
 		float minDist = 999;
 		
-		Point2f camera_c(MarkerParams::camera_cx, MarkerParams::camera_cy);
+    Point2f camera_c(cp.cx, cp.cy);
 		Point2f marker_c((markers[i].LEDs[0].center + markers[i].LEDs[1].center)*0.5);
 		float dist2c = norm(camera_c - marker_c);
 		if (dist2c < minDist)
@@ -240,9 +265,9 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
 	float top = box.y - box.height;
 float bot = box.y + box.height * 2;
 left = left < 0 ? 0 : left;
-right = right >= MarkerParams::camera_width ? MarkerParams::camera_width : right;
+right = right >= cp.cols ? cp.cols : right;
 top = top < 0 ? 0 : top;
-bot = bot >= MarkerParams::camera_height ? MarkerParams::camera_height : bot;
+bot = bot >= cp.rows ? cp.rows : bot;
 Rect ROI(left, top, (right - left), (bot - top));
 /// Get Mask
 cv::Mat ROI_bgr = img(ROI).clone();
@@ -301,7 +326,7 @@ int MarkSensor::dbg_save(const Mat &img)
 	false_id++;
 	return 0;
 }
-int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &X, float &Y, float &Z, int &type,int &pix_x,int &pix_y)
+int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, float &Z, int &type,int &pix_x,int &pix_y)
 {
 	img.copyTo(img_show);
 	if (status == STATUS_DETECTING) {
@@ -333,34 +358,91 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &X, float &Y, float &Z,
 	
 	
 	///update 3d position
-	float marker_width = (float)norm(marker.LEDs[0].center - marker.LEDs[1].center);
-	float marker_height = (marker.LEDs[0].width + marker.LEDs[1].width)*0.5f;
-	float focal_length = (MarkerParams::camera_fx + MarkerParams::camera_fy)*0.5f;
-	float real_L = MarkerParams::transformer_small_marker_size;		/// lengh in the real world
-	type = 0;	///infantry
-	if ((marker_width / marker_height) > 4)
-	{
-		real_L = MarkerParams::transformer_big_marker_size;
-		type = 1;	// hero
-	}
-	depth = (real_L*focal_length) / (marker_width);
-	///ʹ�û����˲�
-	if (old_depth > 0) {
-		printf("old_depth:%f new_depth:%f", old_depth, depth);
-		depth = 0.6f*depth + 0.4f*old_depth;    //TODO: 1. Turn the params 2. Kalman filter
-		old_depth = depth;
-		printf(" filtered_depth:%f\n", depth);
-	}
-	else {
-		old_depth = depth;
-	}
 
 
-	Z = depth;
-	X = (target.x - MarkerParams::camera_cx) / MarkerParams::camera_fx*Z;
-	Y = (target.y - MarkerParams::camera_cy) / MarkerParams::camera_fy*Z;
+  float marker_width = (float)norm(marker.LEDs[0].center - marker.LEDs[1].center);
+  float marker_height = (marker.LEDs[0].width + marker.LEDs[1].width)*0.5f;
+//  float focal_length = (MarkerParams::camera_fx + MarkerParams::camera_fy)*0.5f;
+//	float real_L = MarkerParams::transformer_small_marker_size;		/// lengh in the real world
+  type = 0;	///infantry
+  if ((marker_width / marker_height) > 4)
+  {
+//		real_L = MarkerParams::transformer_big_marker_size;
+    type = 1;	// hero
+  }
 
-	printf("Get target: %f %f %f type: %d\n", X, Y, Z, type);
+  // Read points
+  vector<Point2f> imagePoints ;
+  imagePoints.push_back(marker.kpts[0]);
+  imagePoints.push_back(marker.kpts[1]);
+  imagePoints.push_back(marker.kpts[2]);
+  imagePoints.push_back(marker.kpts[3]);
+
+
+  vector<Point3f> objectPoints;
+
+  if(type == 1)//大装甲
+  {
+      objectPoints.push_back(Point3f(-12.5, -3, 0.0));
+      objectPoints.push_back(Point3f(12.5, -3, 0.0));
+      objectPoints.push_back(Point3f(-12.5, 3, 0.0));
+      objectPoints.push_back(Point3f(12.5, 3, 0.0));
+  }
+
+  else//小装甲 或 没检测出型号
+  {
+      objectPoints.push_back(Point3f(-6.4, -2.6, 0.0));
+      objectPoints.push_back(Point3f(6.4, -2.6, 0.0));
+      objectPoints.push_back(Point3f(-6.4, 2.6, 0.0));
+      objectPoints.push_back(Point3f(6.4, 2.6, 0.0));
+  }
+
+
+  Mat rvec(3,1,cv::DataType<double>::type);
+  Mat tvec(3,1,cv::DataType<double>::type);
+
+  solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+
+  vector<Point2f> projectedPoints;
+  projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs, projectedPoints);
+  bool is_true_depth = true;
+  for(unsigned int i = 0; i < projectedPoints.size(); ++i)
+  {
+      //cout << "Image point: " << imagePoints[i] << " Projected to " << projectedPoints[i] << endl;
+      if(imagePoints[i].x/projectedPoints[i].x>1.2 || imagePoints[i].x/projectedPoints[i].x<0.8 ||imagePoints[i].y/projectedPoints[i].y>1.2 || imagePoints[i].y/projectedPoints[i].y<0.8)
+      {
+          is_true_depth = false;
+          break;
+      }
+  }
+  if(is_true_depth)
+  {
+      Mat_<float> test;
+      tvec.convertTo(test, CV_32F);
+      depth = test.at<float>(0, 2);
+  }
+
+//	depth = (real_L*focal_length) / (marker_width);
+
+  if (old_depth > 0) {
+    printf("old_depth:%f new_depth:%f", old_depth, depth);
+    depth = 0.6f*depth + 0.4f*old_depth;    //TODO: 1. Turn the params 2. Kalman filter
+    old_depth = depth;
+    printf(" filtered_depth:%f\n", depth);
+  }
+  else {
+    old_depth = depth;
+  }
+
+  float tanX=(target.x - cp.cx) / cp.fx;
+  float tanY=(target.y - cp.cy) / cp.fy;
+  angX=atan(tanX)*RAD2DEG;
+  angY=atan(tanX)*RAD2DEG;
+  Z = depth;
+  float X = tanX*Z;
+  float Y = tanY*Z;
+
+  printf("Get target: %f %f %f type: %d\n", X, Y, Z, type);
 		return 0;
 }
 

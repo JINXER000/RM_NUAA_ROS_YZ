@@ -16,6 +16,8 @@
 
 #include<memory>
 #include "MarkerParams.h"
+#define RAD2DEG 57.32
+
 using namespace std;
 using namespace cv;
 
@@ -43,14 +45,7 @@ public:
 	Point2f   kpts[4];
 	Rect      bbox;
 	Marker() = default;
-	int ComputeKeyPoints()
-	{
-		kpts[0] = LEDs[0].center + LEDs[0].dir*LEDs[0].width*0.5f;
-		kpts[1] = LEDs[1].center + LEDs[1].dir*LEDs[1].width*0.5f;
-		kpts[2] = LEDs[1].center - LEDs[1].dir*LEDs[1].width*0.5f;
-		kpts[3] = LEDs[0].center - LEDs[0].dir*LEDs[0].width*0.5f;
-		return 0;
-	}
+  int ComputeKeyPoints();
 	int ComputeBBox()
 	{
 		float max_x = 0, max_y = 0;
@@ -76,6 +71,7 @@ public:
 		bbox.y = min_y;
 		bbox.width = (max_x - min_x);
 		bbox.height = (max_y - min_y);
+
 		return 0;
 	}
 	int Draw(Mat & img) {
@@ -102,7 +98,7 @@ public :
 	};
   MarkSensor(AlgoriParam &ap_,CamParams &cp_);
 	//MarkSensor(const string & calibration, const string & config, const string & cascade);
-	int ProcessFrameLEDXYZ(const Mat & img, float & X, float & Y, float & Z, int &type, int &pix_x, int &pix_y);
+  int ProcessFrameLEDXYZ(const Mat & img, float & angX, float & angY, float & Z, int &type, int &pix_x, int &pix_y);
 	int DetectLEDMarker(const Mat &img, Marker &res_marker);
 	int TrackLEDMarker(const Mat &img, Marker &res_marker);
 
@@ -119,6 +115,9 @@ public :
 
   AlgoriParam ap;
   CamParams cp;
+  Mat cameraMatrix;
+  Mat distCoeffs ;
+
   SensorStatus status= STATUS_DETECTING;
 	Marker marker;
 	Mat img_gray, img_bgr, img_hsv, img_h, led_mask,img_out;

@@ -2,32 +2,32 @@
 #include "MarkerParams.h"
 
 /// Camera
-float MarkerParams::camera_width = 640;
-float MarkerParams::camera_height = 480;
-float MarkerParams::camera_fps = 30;
-float MarkerParams::camera_fx = 865.68;
-float MarkerParams::camera_fy = 863.53;
-float MarkerParams::camera_cx =648.19;
-float MarkerParams::camera_cy = 492.89;
-float MarkerParams::camera_k1 = 0;
-float MarkerParams::camera_k2 = 0;
-float MarkerParams::camera_k3 = 0;
+//float MarkerParams::camera_width = 640;
+//float MarkerParams::camera_height = 480;
+//float MarkerParams::camera_fps = 30;
+//float MarkerParams::camera_fx = 865.68;
+//float MarkerParams::camera_fy = 863.53;
+//float MarkerParams::camera_cx =648.19;
+//float MarkerParams::camera_cy = 492.89;
+//float MarkerParams::camera_k1 = 0;
+//float MarkerParams::camera_k2 = 0;
+//float MarkerParams::camera_k3 = 0;
 
 /// ImageFrame
 int MarkerParams::blur_sz = 5;
 float MarkerParams::blur_sigma = 0.4;
 
 /// Detect
-int MarkerParams::hmin = 90;
-int MarkerParams::hmax = 110;
-int MarkerParams::blue_hmin = 220;
-int MarkerParams::blue_hmax = 255;
-int MarkerParams::red_hmin = 14;
-int MarkerParams::red_hmax = 240;
-int MarkerParams::smin = 40;//tiyu170;40
-int MarkerParams::smax = 255;
-int MarkerParams::vmin = 200;//tiyu240;200
-int MarkerParams::vmax = 255;
+//int MarkerParams::hmin = 90;
+//int MarkerParams::hmax = 110;
+//int MarkerParams::blue_hmin = 220;
+//int MarkerParams::blue_hmax = 255;
+//int MarkerParams::red_hmin = 14;
+//int MarkerParams::red_hmax = 240;
+//int MarkerParams::smin = 40;//tiyu170;40
+//int MarkerParams::smax = 255;
+//int MarkerParams::vmin = 200;//tiyu240;200
+//int MarkerParams::vmax = 255;
 int MarkerParams::contours_length_min = 10;
 int MarkerParams::contours_length_max = 300;
 float MarkerParams::LED_ratio_min = 2;

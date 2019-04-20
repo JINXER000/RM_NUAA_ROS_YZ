@@ -10,7 +10,12 @@ AlgoriParams:
     v_max: 255
 
 CameraParams:
-    cx: 630.5
-    cy: 495.1
-    fx: 871
-    fy: 871
+    cx: 317.2613
+    cy: 243.82
+    fx: 442.2
+    fy: 414.46
+    distcoef1: -0.0906
+    distcoef2: 0.0882
+
+is_record: False
+ifshow: True
