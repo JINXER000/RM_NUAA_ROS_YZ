@@ -263,18 +263,31 @@ int MVCamera::Read()
   }
 }
 
-int MVCamera::GetFrame(Mat &frame)
+int MVCamera::GetFrame(Mat &frame,bool is_color)
 {
   if (frame.cols != sFrameInfo.iWidth || frame.rows != sFrameInfo.iHeight) {
     printf("GetFrame: resize frame !\n");
-    frame.create(sFrameInfo.iHeight, sFrameInfo.iWidth, CV_8UC3);
+    if(is_color)
+    {
+      frame.create(sFrameInfo.iHeight, sFrameInfo.iWidth, CV_8UC3);
+    }else
+    {
+      frame.create(sFrameInfo.iHeight, sFrameInfo.iWidth, CV_8UC1);
+    }
   }
 
   while (!updated) {
     usleep(1000);
   }
+  if(is_color)
+  {
+    memcpy(frame.data, g_pRgbBuffer[ready_buffer_id], frame.cols*frame.rows*3);
+  }
+  else
+  {
+    memcpy(frame.data, g_pRgbBuffer[ready_buffer_id], frame.cols*frame.rows);
 
-  memcpy(frame.data, g_pRgbBuffer[ready_buffer_id], frame.cols*frame.rows*3);
+  }
   updated = false;
   return 0;
 }

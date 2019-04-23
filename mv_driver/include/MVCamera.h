@@ -19,7 +19,7 @@ public:
   static int    Init(int id = 0);
   static int    Play();
   static int    Read();
-  static int    GetFrame(Mat& frame);
+  static int    GetFrame(Mat& frame,bool is_color);
   static int    Stop();
   static int    Uninit();
   static int    SetExposureTime(bool auto_exp, double exp_time = 10000);

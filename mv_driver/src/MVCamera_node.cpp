@@ -31,7 +31,7 @@ public:
       white_balance_, gain_;
   bool large_resolution_=true,is_record_=false,autofocus_, autoexposure_=false, auto_white_balance_;
   VideoSaver saver;
-
+ clock_t begin_time;
   MVCamNode():
     node_("~")
   {
@@ -48,8 +48,9 @@ public:
     MVCamera::SetLargeResolution(large_resolution_);
     node_.param("image_width", image_width_, 640);
     node_.param("image_height", image_height_, 480);
-    node_.param("framerate", framerate_, 100);
+    node_.param("framerate", framerate_, 200);
     node_.getParam("/is_record", is_record_);
+     begin_time= clock();
   }
   ~MVCamNode()
   {
@@ -92,12 +93,13 @@ public:
   bool take_and_send_image()
   {
     // grab the image
-     MVCamera::GetFrame(rawImg);
+     MVCamera::GetFrame(rawImg,1);
      if(rawImg.empty())
      {
        ROS_WARN("NO IMG GOT FROM MV");
        return false;
      }
+ std::cout<<"take image timefly"<<clock()-begin_time<<std::endl;
      if(is_record_)
      {
        saver.write(rawImg);
