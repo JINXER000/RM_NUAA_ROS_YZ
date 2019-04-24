@@ -38,11 +38,16 @@ int frame_process(Mat &srcImg)
     status = 1;
     X_bias = pix_x - bgrImg.cols/2;
     Y_bias = pix_y - bgrImg.rows/2;
-    tgt_pos.xlocation=pix_x;
-    tgt_pos.ylocation=pix_y;
-    tgt_pos.depth=Z;
-    tgt_pos.angX=angX;
-    tgt_pos.angY=angY;
+//    tgt_pos.xlocation=pix_x;
+//    tgt_pos.ylocation=pix_y;
+//    tgt_pos.depth=Z;
+//    tgt_pos.angX=angX;
+//    tgt_pos.angY=angY;
+    tgt_pos.xlocation=1;
+    tgt_pos.ylocation=2;
+    tgt_pos.depth=3;
+    tgt_pos.angX=4;
+    tgt_pos.angY=5;
     std::cout<<"target pix::  "<<pix_x<<","<<pix_y<<std::endl;
   }else
   {

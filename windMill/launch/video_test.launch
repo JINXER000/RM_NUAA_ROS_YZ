@@ -8,7 +8,7 @@
 
 
 
-<!--<node pkg="serial_common" type="serial_common_node" name="serial_common_node" output="screen" />-->
+<node pkg="serial_common" type="serial_common_node" name="serial_common_node" output="screen" />
 
 <rosparam command="load" file="$(find windMill)/cfg/params.yaml" />
 
