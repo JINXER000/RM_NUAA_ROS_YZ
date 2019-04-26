@@ -38,16 +38,12 @@ int frame_process(Mat &srcImg)
     status = 1;
     X_bias = pix_x - bgrImg.cols/2;
     Y_bias = pix_y - bgrImg.rows/2;
-//    tgt_pos.xlocation=pix_x;
-//    tgt_pos.ylocation=pix_y;
-//    tgt_pos.depth=Z;
-//    tgt_pos.angX=angX;
-//    tgt_pos.angY=angY;
-    tgt_pos.xlocation=1;
-    tgt_pos.ylocation=2;
-    tgt_pos.depth=3;
-    tgt_pos.angX=4;
-    tgt_pos.angY=5;
+    tgt_pos.xlocation=pix_x;
+    tgt_pos.ylocation=pix_y;
+    tgt_pos.depth=Z;
+    tgt_pos.angX=angX;
+    tgt_pos.angY=angY;
+
     std::cout<<"target pix::  "<<pix_x<<","<<pix_y<<std::endl;
   }else
   {
@@ -68,7 +64,7 @@ class ImageConverter
   ros::Subscriber cfg_sub;
   ros::Subscriber WM_activator_sub;
 
-  bool is_red;
+  bool is_red,ifshow=1;
   int  h_min,h_max,s_min,s_max,v_min,v_max;
   int rows=480, cols=640,fps=120;
   float cx, cy, fx, fy,distcoef1,distcoef2;
@@ -79,31 +75,14 @@ public:
     : it_(nh_)
   {
   //load param from params.yaml
-    nh_.getParam("/AlgoriParams/is_enemy_red",is_red);
-    if(is_red)
-    {
-      nh_.getParam("/AlgoriParams/h_min_r",h_min);
-      nh_.getParam("/AlgoriParams/h_max_r",h_max);
-    }else
-    {
-      nh_.getParam("/AlgoriParams/h_min_b",h_min);
-      nh_.getParam("/AlgoriParams/h_max_b",h_max);
-    }
-    nh_.getParam("/AlgoriParams/s_min",s_min);
-    nh_.getParam("/AlgoriParams/s_max",s_max);
-    nh_.getParam("/AlgoriParams/v_min",v_min);
-    nh_.getParam("/AlgoriParams/v_max",v_max);
-    nh_.getParam("/CameraParams/cx",cx);
-    nh_.getParam("/CameraParams/cy",cy);
-    nh_.getParam("/CameraParams/fx",fx);
-    nh_.getParam("/CameraParams/fy",fy);
-    nh_.getParam("/CameraParams/distcoef1",distcoef1);
-    nh_.getParam("/CameraParams/distcoef2",distcoef2);
-    nh_.getParam("/ifshow",MarkerParams::ifShow);
-    AlgoriParam ap(is_red,h_min,h_max,s_min,s_max,v_min,v_max);
-    CamParams cp(rows,cols,fps,cx,cy,fx,fy,distcoef1,distcoef2);
 
-    markSensor=new MarkSensor(ap,cp);
+
+    nh_.getParam("/ifshow",ifshow);
+
+    AlgoriParam ap;
+     CamParams cp;
+    MarkerParams mp(ifshow);
+    markSensor=new MarkSensor(ap,cp,mp);
     // Subscrive to input video feed and publish output video feed
 
     image_sub_ = it_.subscribe("/MVCamera/image_raw", 1,
@@ -167,7 +146,7 @@ public:
         frame_process(img_src);
     }
     // Update GUI Window
-    if(MarkerParams::ifShow)
+    if(ifshow)
     {
         cv::imshow("detection result", markSensor->img_show);
         //    if(!markSensor.img_out.empty())

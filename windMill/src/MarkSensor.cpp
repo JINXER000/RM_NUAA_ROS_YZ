@@ -28,10 +28,10 @@ int Marker::ComputeKeyPoints()
   return 0;
 }
 
-MarkSensor::MarkSensor(AlgoriParam &ap_,CamParams &cp_):
-  ap(ap_),cp(cp_)
+MarkSensor::MarkSensor(AlgoriParam &ap_,CamParams &cp_,MarkerParams &mp_):
+  ap(ap_),cp(cp_),mp(mp_)
 {
-cameraMatrix = (cv::Mat_<double>(3,3) << cp.fx, 0, cp.cx, 0, cp.fy, cp.cy, 0, 0, 1);
+  cameraMatrix = (cv::Mat_<double>(3,3) << cp.fx, 0, cp.cx, 0, cp.fy, cp.cy, 0, 0, 1);
  distCoeffs = (Mat_<double>(1,4) <<cp.distcoef1, cp.distcoef2, 0, 0);
 
 }
@@ -95,15 +95,15 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 	vector<vector<Point>> tmp_countours;
 	vector<vector<Point>*> pContours;
 	// 3 rad
-	float cos_marker_parallel_radian = cos(MarkerParams::marker_parallel_angle / 180.f*3.1415926f);
-	float cos_marker_vertical_radian = cos((90 - MarkerParams::marker_vertical_angle) / 180.f*3.1415926f);
-	float cos_marker_direction_radian = cos(MarkerParams::marker_direction_angle / 180.f*3.1415926f);
+  float cos_marker_parallel_radian = cos(mp.marker_parallel_angle / 180.f*3.1415926f);
+  float cos_marker_vertical_radian = cos((90 - mp.marker_vertical_angle) / 180.f*3.1415926f);
+  float cos_marker_direction_radian = cos(mp.marker_direction_angle / 180.f*3.1415926f);
 
 	findContours(roi_mask, tmp_countours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 	for (auto &contour : tmp_countours)
 	{
 		int cont_sz = static_cast<int>(contour.size());
-		if (cont_sz >= MarkerParams::contours_length_min && cont_sz <= MarkerParams::contours_length_max) 
+    if (cont_sz >= mp.contours_length_min && cont_sz <= mp.contours_length_max)
 			pContours.push_back(&contour);
 
 		
@@ -115,14 +115,14 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 		RotRect LED;
 		if (PCALEDStrip(*pContour, LED) == STATUS_SUCCESS) {
 			/// check ratio and length
-			if (LED.width < MarkerParams::LED_width_min || LED.width > MarkerParams::LED_width_max) continue;
+      if (LED.width < mp.LED_width_min || LED.width > mp.LED_width_max) continue;
 			//ADD MORE CONSTRAINTS!!
 			if (fabs(LED.dir.dot(cv::Point2f(1, 0))) >cos_marker_direction_radian)// degree
 			{
 				continue;
 			}
 			float ratio = LED.width / LED.height;
-			if (ratio < MarkerParams::LED_ratio_min || ratio > MarkerParams::LED_ratio_max) continue;
+      if (ratio < mp.LED_ratio_min || ratio > mp.LED_ratio_max) continue;
 			LEDs.push_back(LED);
 		}
 			}
@@ -154,7 +154,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 			//check distance 
 			float distance = norm(c2c);
 
-			if (distance > MarkerParams::marker_size_max || distance < MarkerParams::marker_size_min)
+      if (distance > mp.marker_size_max || distance < mp.marker_size_min)
 			{
 				//printf("LED distance not satisfied !\n");
 				continue;
@@ -172,7 +172,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 			}
 			// check hori distance
 			float distance_hori = para_dist;
-			if (distance_hori > MarkerParams::marker_size_max || distance_hori < MarkerParams::marker_size_min)
+      if (distance_hori > mp.marker_size_max || distance_hori < mp.marker_size_min)
 			{
 				//printf("LED horizontal not satisfied !\n");
 				continue;
@@ -184,7 +184,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 			float marker_height = (LEDs[i].width + LEDs[j].width)*0.5f;
 			/// check marker width/height ratio
 			float marker_size_ratio = marker_width / marker_height;
-			if (marker_size_ratio > MarkerParams::marker_ratio_max || marker_size_ratio < MarkerParams::marker_ratio_min) {
+      if (marker_size_ratio > mp.marker_ratio_max || marker_size_ratio < mp.marker_ratio_min) {
 				//printf("Marker size ratio not satisfied !\n");
 				continue;
 			}
@@ -289,7 +289,7 @@ if (GetLEDMarker(ROI_led_mask, res_marker) != STATUS_SUCCESS) {
 	return -1;
 }
 ROI_show = ROI_bgr.clone();
-if (MarkerParams::ifShow) {
+if (mp.ifShow) {
 	cv::imshow("track window", ROI_show);
 }
 res_marker.LEDs[0].center.x += ROI.x;
@@ -297,7 +297,7 @@ res_marker.LEDs[0].center.y += ROI.y;
 res_marker.LEDs[1].center.x += ROI.x;
 res_marker.LEDs[1].center.y += ROI.y;
 ///draw the best marker
-if (MarkerParams::ifShow)
+if (mp.ifShow)
 {
 	res_marker.ComputeKeyPoints();
 	res_marker.ComputeBBox();
@@ -362,12 +362,9 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
 
   float marker_width = (float)norm(marker.LEDs[0].center - marker.LEDs[1].center);
   float marker_height = (marker.LEDs[0].width + marker.LEDs[1].width)*0.5f;
-//  float focal_length = (MarkerParams::camera_fx + MarkerParams::camera_fy)*0.5f;
-//	float real_L = MarkerParams::transformer_small_marker_size;		/// lengh in the real world
   type = 0;	///infantry
   if ((marker_width / marker_height) > 4)
   {
-//		real_L = MarkerParams::transformer_big_marker_size;
     type = 1;	// hero
   }
 
@@ -534,7 +531,6 @@ bool HaarD::Detect_track( const Mat & img, float & X, float & Y, float & Z, int 
 		pix_x=location.x+location.width*0.5;
 		pix_y=location.y+location.height*0.5;
 
-		 if (MarkerParams::ifShow) 
 			rectangle(MarkSensor::img_show, location, Scalar(0, 128, 255), 2);
 
 	}

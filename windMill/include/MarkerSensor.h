@@ -96,7 +96,7 @@ public :
 		RED = 1,
 		BLUE=2
 	};
-  MarkSensor(AlgoriParam &ap_,CamParams &cp_);
+  MarkSensor(AlgoriParam &ap_,CamParams &cp_, MarkerParams &mp_);
 	//MarkSensor(const string & calibration, const string & config, const string & cascade);
   int ProcessFrameLEDXYZ(const Mat & img, float & angX, float & angY, float & Z, int &type, int &pix_x, int &pix_y);
 	int DetectLEDMarker(const Mat &img, Marker &res_marker);
@@ -115,6 +115,7 @@ public :
 
   AlgoriParam ap;
   CamParams cp;
+  MarkerParams mp;
   Mat cameraMatrix;
   Mat distCoeffs ;
 

@@ -10,12 +10,30 @@ AlgoriParams:
     v_max: 255
 
 CameraParams:
+    rows: 480
+    cols: 640
+    fps: 100
     cx: 317.2613
     cy: 243.82
     fx: 442.2
     fy: 414.46
     distcoef1: -0.0906
     distcoef2: 0.0882
+
+MarkerParams:
+    contours_length_min:  10
+    contours_length_max:  300
+    LED_ratio_min:  2
+    LED_ratio_max:  20
+    LED_width_min:  7
+    LED_width_max:  100
+    marker_parallel_angle:  6
+    marker_vertical_angle:  10
+    marker_direction_angle:  45
+    marker_ratio_min:  0.8
+    marker_ratio_max:  5
+    marker_size_min:  10
+    marker_size_max:  200
 
 is_record: False
 ifshow: True
