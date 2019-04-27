@@ -16,18 +16,18 @@ class AlgoriParam
   public:
   ros::NodeHandle nh_;
   bool is_red;
-  int  h_min,h_max,s_min,s_max,v_min,v_max;
+  int  ch1_min,ch1_max,ch2_min,ch2_max,ch3_min,ch3_max;
 
   AlgoriParam();
   AlgoriParam(bool is_red_,
-              int  h_min_,
-              int h_max_,
-              int s_min_,
-              int s_max_,
-              int v_min_,
-              int v_max_):is_red(is_red_),
-    h_min(h_min_),h_max(h_max_),s_min(s_min_),
-    s_max(s_max_),v_min(v_min_),v_max(v_max_)
+              int  ch1_min_,
+              int ch1_max_,
+              int ch2_min_,
+              int ch2_max_,
+              int ch3_min_,
+              int ch3_max_):is_red(is_red_),
+    ch1_min(ch1_min_),ch1_max(ch1_max_),ch2_min(ch2_min_),
+    ch2_max(ch2_max_),ch3_min(ch3_min_),ch3_max(ch3_max_)
   {
 
   }
@@ -55,9 +55,9 @@ public:
 
 
     ros::NodeHandle nh_;
-     int   contours_length_min, contours_length_max;
+     int   contours_lengtch1_min, contours_lengtch1_max;
      float LED_ratio_min, LED_ratio_max;
-     float LED_width_min, LED_width_max;
+     float LED_widtch1_min, LED_widtch1_max;
      float marker_parallel_angle;
      float marker_vertical_angle;
      float marker_direction_angle;

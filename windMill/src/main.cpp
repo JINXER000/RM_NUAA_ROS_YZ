@@ -11,11 +11,9 @@
 #include "std_msgs/String.h"
 #include <geometry_msgs/TransformStamped.h>
 #include <tf/tf.h>
-static const std::string OPENCV_WINDOW = "Image window";
 using namespace std;
 using namespace cv;
 Mat img_src,bgrImg;
-Size dist_size = Size(640, 480);
 int X_bias, Y_bias, pix_x, pix_y;
 int status=0,lastStatus=0;
 bool isSuccess = 0;
@@ -25,13 +23,11 @@ MarkSensor *markSensor=NULL;
 serial_common::Guard tgt_pos;
 bool is_windMill_mode=0;
 
-int frame_process(Mat &srcImg)
+int frame_process(Mat &bgrImg)
 {
 
 
-  /// detect and track
-  resize(srcImg, bgrImg, dist_size);
-  // bgrImg=srcImg.clone();
+
   isSuccess = markSensor->ProcessFrameLEDXYZ(bgrImg, angX, angY, Z, led_type,
                                             pix_x, pix_y);
   if (!isSuccess) {
@@ -65,10 +61,7 @@ class ImageConverter
   ros::Subscriber WM_activator_sub;
 
   bool is_red,ifshow=1;
-  int  h_min,h_max,s_min,s_max,v_min,v_max;
-  int rows=480, cols=640,fps=120;
-  float cx, cy, fx, fy,distcoef1,distcoef2;
-
+  clock_t begin_counter=clock();
 
 public:
   ImageConverter()
@@ -116,18 +109,20 @@ public:
   void cfg_cb(const ros_dynamic_test::dyn_cfgConstPtr &msg)
   {
     if(msg->is_red)
-      markSensor->ap=AlgoriParam(msg->is_red,msg->h_min_r,msg->h_max_r,
-                               msg->s_min,msg->s_max,msg->v_min,
-                               msg->v_max);
+      markSensor->ap=AlgoriParam(msg->is_red,msg->ch1_min_r,msg->ch1_max_r,
+                               msg->ch2_min,msg->ch2_max,msg->ch3_min,
+                               msg->ch3_max);
     else
-      markSensor->ap=AlgoriParam(msg->is_red,msg->h_min_b,msg->h_max_b,
-                               msg->s_min,msg->s_max,msg->v_min,
-                               msg->v_max);
+      markSensor->ap=AlgoriParam(msg->is_red,msg->ch1_min_b,msg->ch1_max_b,
+                               msg->ch2_min,msg->ch2_max,msg->ch3_min,
+                               msg->ch3_max);
 //    MarkerParams::ifShow=msg->is_show_img;
   }
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {
-    const clock_t begin_time = clock();
+    std::cout <<" node fps: "<< CLOCKS_PER_SEC/float( clock () - begin_counter )<<std::endl;
+
+    begin_counter = clock();
     try
     {
       img_src = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8)->image.clone();
@@ -137,14 +132,16 @@ public:
       ROS_ERROR("cv_bridge exception: %s", e.what());
       return;
     }
-
     if(is_windMill_mode)   // strike wind mill
     {
         img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
     }else   //normal
     {
+
         frame_process(img_src);
+
     }
+
     // Update GUI Window
     if(ifshow)
     {
@@ -169,7 +166,6 @@ public:
     sensor_msgs::ImagePtr img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_out).toImageMsg();
     img_msg->header.stamp = ros::Time::now();
     image_pub_.publish(img_msg);
-    std::cout <<" node fps: "<< CLOCKS_PER_SEC/float( clock () - begin_time )<<std::endl;
 
 
   }

@@ -28,14 +28,14 @@ void dynCallBack(const my_msgs::tutorialsConfig &data)
   cfg_msg.int_param=data.int_param;
   cfg_msg.double_param=data.double_param;
   cfg_msg.is_red=data.is_red;
-  cfg_msg.h_min_r=data.h_min_r;
-  cfg_msg.h_max_r=data.h_max_r;
-  cfg_msg.h_min_b=data.h_min_b;
-  cfg_msg.h_max_b=data.h_max_b;
-  cfg_msg.s_min=data.s_min;
-  cfg_msg.s_max=data.s_max;
-  cfg_msg.v_min=data.v_min;
-  cfg_msg.v_max=data.v_max;
+  cfg_msg.ch1_min_r=data.ch1_min_r;
+  cfg_msg.ch1_max_r=data.ch1_max_r;
+  cfg_msg.ch1_min_b=data.ch1_min_b;
+  cfg_msg.ch1_max_b=data.ch1_max_b;
+  cfg_msg.ch2_min=data.ch2_min;
+  cfg_msg.ch2_max=data.ch2_max;
+  cfg_msg.ch3_min=data.ch3_min;
+  cfg_msg.ch3_max=data.ch3_max;
 
   exp_time_msg.data=data.exp_time;
   is_large_msg.data=data.is_large_resolution;

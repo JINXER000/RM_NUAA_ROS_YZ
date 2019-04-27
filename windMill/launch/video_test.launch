@@ -1,5 +1,5 @@
 <launch>
-<param name="video_source" value="$(find windMill)/../../../../samples/armor/red-p.mov"/>
+<param name="video_source" value="$(find windMill)/../../../../samples/armor/heatup-match/blue.avi"/>
     <node pkg="windMill" type="windMill_node" name="windMill" output="screen" >
         <remap from="/MVCamera/image_raw" to ="/camera/image_raw"/>
      </node>
