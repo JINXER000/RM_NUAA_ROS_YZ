@@ -183,9 +183,9 @@ public:
     sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_show).toImageMsg();
     show_img_msg->header.stamp=ros::Time::now();
     show_image_pub_.publish(show_img_msg);
-    sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->led_mask).toImageMsg();
-    binary_img_msg->header.stamp=ros::Time::now();
-    binary_image_pub_.publish(binary_img_msg);
+//    sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->led_mask).toImageMsg();
+//    binary_img_msg->header.stamp=ros::Time::now();
+//    binary_image_pub_.publish(binary_img_msg);
     std::cout <<" time of img callback: "<< float( clock () - begin_counter )/CLOCKS_PER_SEC<<std::endl;
 
   }

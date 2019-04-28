@@ -21,12 +21,40 @@ using namespace cv;
 Size dist_size = Size(640, 480);
 string video_source;
 int frame_cnt=0;
+Mat img_show;
+void imageCb(const sensor_msgs::ImageConstPtr& msg)
+{
+
+  try
+  {
+    img_show = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8)->image.clone();
+  }
+  catch (cv_bridge::Exception& e)
+  {
+    ROS_ERROR("cv_bridge exception: %s", e.what());
+    return;
+  }
+      cv::imshow("another detection result", img_show);
+      //    if(!markSensor.img_out.empty())
+      //      cv::imshow("feed to number", markSensor.img_out);
+      char key=cv::waitKey(1);
+      if(key=='q' ||key=='Q')
+      {
+          //send SIGINT
+          system("pkill roslaunch");
+      }
+
+
+
+}
+
 int main(int argc, char **argv)
 {
   ros::init(argc,argv,"video_publisher");
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);//发布图片需要用到image_transport
   image_transport::Publisher pub = it.advertise("/camera/image_raw", 1);
+//  image_transport::Subscriber image_sub_=it.subscribe("/armor_detector/output_img", 1,imageCb);
 
   nh.getParam("/video_source",video_source);
 

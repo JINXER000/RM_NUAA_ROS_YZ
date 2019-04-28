@@ -38,4 +38,4 @@ MarkerParams:
     marker_size_max:  200
 
 is_record: False
-ifshow: False
+ifshow: True

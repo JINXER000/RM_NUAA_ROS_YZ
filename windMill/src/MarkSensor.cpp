@@ -5,7 +5,7 @@ Mat MarkSensor::img_show, MarkSensor::ROI_show;
 using namespace cv;
 using namespace std;
 
-clock_t begin_time[6];
+clock_t begin_time[10];
 int Marker::ComputeKeyPoints()
 {
   bool is_led0_left=(LEDs[1].center.x-LEDs[0].center.x)>0;
@@ -254,9 +254,9 @@ int MarkSensor::DetectLEDMarker(const Mat &img, Marker &res_marker)
   //cvtColor(img_bgr, img_hsv, CV_BGR2HSV);
   img.copyTo(img_hsv);
   /*actually we use bgr*/
-   begin_time[4]=clock();
-      cv::inRange(img_hsv,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),led_mask);
-    std::cout <<" TO BINARY : "<< float( clock () - begin_time[4] )/CLOCKS_PER_SEC<<std::endl;
+  begin_time[4]=clock();
+  cv::inRange(img_hsv,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),led_mask);
+  std::cout <<" TO BINARY : "<< float( clock () - begin_time[4] )/CLOCKS_PER_SEC<<std::endl;
 
   //Mat led_erode;
   //Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
@@ -293,18 +293,20 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
     status = STATUS_DETECTING;
     return -1;
   }
-  cv::inRange(ROI_bgr,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),ROI_led_mask);
+  begin_time[4]=clock();
 
+  cv::inRange(ROI_bgr,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),ROI_led_mask);
+  std::cout <<" ROI TO BINARY : "<< float( clock () - begin_time[4] )/CLOCKS_PER_SEC<<std::endl;
 
   /// Get Marker
   if (GetLEDMarker(ROI_led_mask, res_marker) != STATUS_SUCCESS) {
     printf("Get no marker!\n");
     return -1;
   }
-  ROI_show = ROI_bgr.clone();
-  if (mp.ifShow) {
-    cv::imshow("track window", ROI_show);
-  }
+  //  ROI_show = ROI_bgr.clone();
+  //  if (mp.ifShow) {
+  //    cv::imshow("track window", ROI_show);
+  //  }
   res_marker.LEDs[0].center.x += ROI.x;
   res_marker.LEDs[0].center.y += ROI.y;
   res_marker.LEDs[1].center.x += ROI.x;
@@ -312,10 +314,10 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   ///draw the best marker
 
 
-    if (mp.ifShow)
-    {
-        res_marker.ComputeKeyPoints();
-        res_marker.ComputeBBox();
+  if (mp.ifShow)
+  {
+    res_marker.ComputeKeyPoints();
+    res_marker.ComputeBBox();
     img_out=img_show(res_marker.bbox);
     rectangle(img_show, res_marker.bbox, Scalar(0, 255, 0), 4);
 
@@ -377,76 +379,76 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   ///update 3d position
 
 
-//begin_time[5]=clock();
-//  float marker_width = (float)norm(marker.LEDs[0].center - marker.LEDs[1].center);
-//  float marker_height = (marker.LEDs[0].width + marker.LEDs[1].width)*0.5f;
-//  type = 0;	///infantry
-//  if ((marker_width / marker_height) > 4)
-//  {
-//    type = 1;	// hero
-//  }
+  begin_time[5]=clock();
+  float marker_width = (float)norm(marker.LEDs[0].center - marker.LEDs[1].center);
+  float marker_height = (marker.LEDs[0].width + marker.LEDs[1].width)*0.5f;
+  type = 0;	///infantry
+  if ((marker_width / marker_height) > 4)
+  {
+    type = 1;	// hero
+  }
 
-//  // Read points
-//  vector<Point2f> imagePoints ;
-//  imagePoints.push_back(marker.kpts[0]);
-//  imagePoints.push_back(marker.kpts[1]);
-//  imagePoints.push_back(marker.kpts[2]);
-//  imagePoints.push_back(marker.kpts[3]);
-
-
-//  vector<Point3f> objectPoints;
-
-//  if(type == 1)//大装甲
-//  {
-//    objectPoints.push_back(Point3f(-12.5, -3, 0.0));
-//    objectPoints.push_back(Point3f(12.5, -3, 0.0));
-//    objectPoints.push_back(Point3f(-12.5, 3, 0.0));
-//    objectPoints.push_back(Point3f(12.5, 3, 0.0));
-//  }
-
-//  else//小装甲 或 没检测出型号
-//  {
-//    objectPoints.push_back(Point3f(-6.4, -2.6, 0.0));
-//    objectPoints.push_back(Point3f(6.4, -2.6, 0.0));
-//    objectPoints.push_back(Point3f(-6.4, 2.6, 0.0));
-//    objectPoints.push_back(Point3f(6.4, 2.6, 0.0));
-//  }
+  // Read points
+  vector<Point2f> imagePoints ;
+  imagePoints.push_back(marker.kpts[0]);
+  imagePoints.push_back(marker.kpts[1]);
+  imagePoints.push_back(marker.kpts[2]);
+  imagePoints.push_back(marker.kpts[3]);
 
 
-//  Mat rvec(3,1,cv::DataType<double>::type);
-//  Mat tvec(3,1,cv::DataType<double>::type);
+  vector<Point3f> objectPoints;
 
-//  solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+  if(type == 1)//大装甲
+  {
+    objectPoints.push_back(Point3f(-12.5, -3, 0.0));
+    objectPoints.push_back(Point3f(12.5, -3, 0.0));
+    objectPoints.push_back(Point3f(-12.5, 3, 0.0));
+    objectPoints.push_back(Point3f(12.5, 3, 0.0));
+  }
 
-//  vector<Point2f> projectedPoints;
-//  projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs, projectedPoints);
-//  bool is_true_depth = true;
-//  for(unsigned int i = 0; i < projectedPoints.size(); ++i)
-//  {
-//    if(imagePoints[i].x/projectedPoints[i].x>1.2 || imagePoints[i].x/projectedPoints[i].x<0.8 ||imagePoints[i].y/projectedPoints[i].y>1.2 || imagePoints[i].y/projectedPoints[i].y<0.8)
-//    {
-//      is_true_depth = false;
-//      break;
-//    }
-//  }
-//  if(is_true_depth)
-//  {
-//    Mat_<float> test;
-//    tvec.convertTo(test, CV_32F);
-//    depth = test.at<float>(0, 2);
-//  }
+  else//小装甲 或 没检测出型号
+  {
+    objectPoints.push_back(Point3f(-6.4, -2.6, 0.0));
+    objectPoints.push_back(Point3f(6.4, -2.6, 0.0));
+    objectPoints.push_back(Point3f(-6.4, 2.6, 0.0));
+    objectPoints.push_back(Point3f(6.4, 2.6, 0.0));
+  }
 
-//  //	depth = (real_L*focal_length) / (marker_width);
 
-//  if (old_depth > 0) {
-//    printf("old_depth:%f new_depth:%f", old_depth, depth);
-//    depth = 0.6f*depth + 0.4f*old_depth;    //TODO: 1. Turn the params 2. Kalman filter
-//    old_depth = depth;
-//    printf(" filtered_depth:%f\n", depth);
-//  }
-//  else {
-//    old_depth = depth;
-//  }
+  Mat rvec(3,1,cv::DataType<double>::type);
+  Mat tvec(3,1,cv::DataType<double>::type);
+
+  solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+
+  vector<Point2f> projectedPoints;
+  projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs, projectedPoints);
+  bool is_true_depth = true;
+  for(unsigned int i = 0; i < projectedPoints.size(); ++i)
+  {
+    if(imagePoints[i].x/projectedPoints[i].x>1.2 || imagePoints[i].x/projectedPoints[i].x<0.8 ||imagePoints[i].y/projectedPoints[i].y>1.2 || imagePoints[i].y/projectedPoints[i].y<0.8)
+    {
+      is_true_depth = false;
+      break;
+    }
+  }
+  if(is_true_depth)
+  {
+    Mat_<float> test;
+    tvec.convertTo(test, CV_32F);
+    depth = test.at<float>(0, 2);
+  }
+
+  //	depth = (real_L*focal_length) / (marker_width);
+
+  if (old_depth > 0) {
+    printf("old_depth:%f new_depth:%f", old_depth, depth);
+    depth = 0.6f*depth + 0.4f*old_depth;    //TODO: 1. Turn the params 2. Kalman filter
+    old_depth = depth;
+    printf(" filtered_depth:%f\n", depth);
+  }
+  else {
+    old_depth = depth;
+  }
 
   float tanX=(target.x - cp.cx) / cp.fx;
   float tanY=(target.y - cp.cy) / cp.fy;

@@ -7,7 +7,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
 from os.path import realpath, dirname, join
 from numPred.msg import out_msg
-import keras as K
+#import keras as K
 
 class numPredNode(object):
     def __init__(self):
@@ -20,8 +20,35 @@ class numPredNode(object):
 #        self.model=K.models.load_model(model_path)
         self.pub_num=rospy.Publisher('/numPred/num',out_msg,queue_size=1)
         self.sub_image=rospy.Subscriber("/armor_detector/armor_roi",Image,self.img_callback)
+        self.sub_whole_image=rospy.Subscriber("/armor_detector/binary_img",Image,self.img_whole_callback)
+        self.sub_binary_image=rospy.Subscriber("/armor_detector/output_img",Image,self.img_binary_callback)
         print("initialize done")
         rospy.spin()
+
+
+    def img_whole_callback(self,data):
+        try:
+            # Convert image to numpy array
+            show_image = self._bridge.imgmsg_to_cv2(data, "bgr8")
+
+
+        except CvBridgeError as e:
+            rospy.logerr(e)
+
+        cv2.imshow("output img",show_image)
+        key=cv2.waitKey(1)
+
+    def img_binary_callback(self,data):
+        try:
+            # Convert image to numpy array
+            binary_image = self._bridge.imgmsg_to_cv2(data, "bgr8")
+
+
+        except CvBridgeError as e:
+            rospy.logerr(e)
+
+        cv2.imshow("binary img",binary_image)
+        key=cv2.waitKey(1)
 
     def img_callback(self, data):
         try:
