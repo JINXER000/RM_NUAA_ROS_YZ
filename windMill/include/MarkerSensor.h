@@ -16,7 +16,7 @@
 
 #include<memory>
 #include "MarkerParams.h"
-#define RAD2DEG 57.32
+#include "utils.h"
 
 using namespace std;
 using namespace cv;
@@ -44,12 +44,20 @@ public:
 	RotRect   LEDs[2];
 	Point2f   kpts[4];
 	Rect      bbox;
-	Marker() = default;
+  float decision_params[3];
+  float   old_depth, depth;
+
+  Marker()
+  {
+    old_depth=0;
+    depth=0;
+
+  }
   int ComputeKeyPoints();
 	int ComputeBBox()
 	{
 		float max_x = 0, max_y = 0;
-		float min_x = 999, min_y = 999;
+    float min_x = 9999, min_y = 9999;
 		for (int i = 0; i < 4; i++) {
 			Point2f kpt = kpts[i];			// may be wrong
 			if (kpt.x < min_x)
@@ -89,7 +97,10 @@ public :
 	enum SensorStatus {
 		STATUS_SUCCESS = 0,
 		STATUS_TRACKING,
-		STATUS_DETECTING
+    STATUS_TRACKLOST0,
+    STATUS_TRACKLOST1,
+    STATUS_TRACKLOST2,
+    STATUS_DETECTING
 	};
 	enum MarkerType {
 		All = 0,
@@ -105,14 +116,11 @@ public :
 	int GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker);
 	int PCALEDStrip(vector<cv::Point> &contour, RotRect &LED);
 	float ComputeLengthAlongDir(vector<cv::Point> &contour, cv::Point2f &dir);
-	void ShowMarkers(cv::Mat &roi_Mat, Marker &res_marker);
 	int paraDistance(RotRect &LED1, RotRect &LED2);
-	string num2str(double i);
-	int dbg_save(const Mat &img);
 	int Kalman();
-
+  int tgt_selector(vector<Marker> &markers);
 	int GammaCorrect();
-
+  int calcDepth(Marker &marker);
   AlgoriParam ap;
   CamParams cp;
   MarkerParams mp;
@@ -120,11 +128,11 @@ public :
   Mat distCoeffs ;
 
   SensorStatus status= STATUS_DETECTING;
-	Marker marker;
+  Marker marker;
 	Mat img_gray, img_bgr, img_hsv, img_h, led_mask,img_out;
 	static Mat img_show,ROI_show;
-	float   old_depth, depth;
 	Point2f old_target, target;
+  int track_fail_cnt[3];
 };
 
 class HaarD

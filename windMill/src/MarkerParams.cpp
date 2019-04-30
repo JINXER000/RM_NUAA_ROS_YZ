@@ -39,12 +39,15 @@
    nh_.getParam("/AlgoriParams/ch2_min",ch2_min);
    nh_.getParam("/AlgoriParams/ch2_max",ch2_max);
 
+   nh_.getParam("/dbg_img_path",dbg_path);
+
+
  }
 
  MarkerParams::MarkerParams(bool ifshow_)
  {
    ifShow=ifshow_;
-
+   nh_.getParam("/if_calc_depth",if_calc_depth);
    nh_.getParam("/MarkerParams/contours_lengtch1_min",contours_lengtch1_min);
    nh_.getParam("/MarkerParams/contours_lengtch1_max",contours_lengtch1_max);
    nh_.getParam("/MarkerParams/LED_ratio_min",LED_ratio_min);
@@ -58,6 +61,10 @@
    nh_.getParam("/MarkerParams/marker_ratio_max",marker_ratio_max);
    nh_.getParam("/MarkerParams/marker_size_min",marker_size_min);
    nh_.getParam("/MarkerParams/marker_size_max",marker_size_max);
+
+   cos_marker_parallel_radian = cos(marker_parallel_angle /RAD2DEG);
+   cos_marker_direction_radian = cos(marker_direction_angle /RAD2DEG);
+   cos_marker_vertical_radian = cos((90 - marker_vertical_angle) /RAD2DEG);
  }
 
 

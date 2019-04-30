@@ -1,0 +1,7 @@
+<launch>
+<param name="video_source" value="$(find windMill)/../../../../samples/armor/heatup-match/blue.avi"/>
+<param name="dbg_img_path" value="$(find windMill)/../../../../dbg_img/"/>
+<param name="is_video_dbg" value="1"/>
+    <node pkg="video_pub" type="video_pub_node" name="video_pub" output="screen" respawn="true" />
+
+</launch>

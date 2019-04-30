@@ -19,9 +19,18 @@ using namespace std;
 using namespace std;
 using namespace cv;
 Size dist_size = Size(640, 480);
-string video_source;
+string video_source,dbg_img_path;
 int frame_cnt=0;
 Mat img_show;
+int false_idx=0;
+int is_video_dbg=0;
+string num2str(double i)
+
+{
+  stringstream ss;
+  ss << i;
+  return ss.str();
+}
 void imageCb(const sensor_msgs::ImageConstPtr& msg)
 {
 
@@ -57,7 +66,8 @@ int main(int argc, char **argv)
 //  image_transport::Subscriber image_sub_=it.subscribe("/armor_detector/output_img", 1,imageCb);
 
   nh.getParam("/video_source",video_source);
-
+  nh.getParam("/dbg_img_path",dbg_img_path);
+  nh.getParam("/is_video_dbg",is_video_dbg);
   ros::Rate loop_rate(30);
   //  string path = "/home/yzchen/catkin_ws/videos/windMill.mp4";
 
@@ -81,14 +91,30 @@ int main(int argc, char **argv)
       std::cout<<"video ends"<<std::endl;
       break;
     }
-    //将opencv的图片转换成ros的sensor_msgs，然后才能发布。
-    resize(frame, frame, dist_size);
-    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
+    if(is_video_dbg)
+    {
+      imshow("raw img",frame);
+      char key=waitKey(1);
+      if (key == 's') {
+        false_idx++;
+          string saveName_src =
+              dbg_img_path + num2str(false_idx) + "falsesrc.jpg";
 
-    pub.publish(msg);
-    frame_cnt++;
-    if(frame_cnt>1000)
-      break;
+        std::cout<<saveName_src<<endl;
+        imwrite(saveName_src, frame);
+      }
+    }else
+    {
+      //将opencv的图片转换成ros的sensor_msgs，然后才能发布。
+    if(Size(frame.cols,frame.rows)!=dist_size)
+       resize(frame, frame, dist_size);
+      sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
+
+      pub.publish(msg);
+      frame_cnt++;
+      if(frame_cnt>1000)
+        break;
+    }
     ros::spinOnce();
     loop_rate.sleep();
   }

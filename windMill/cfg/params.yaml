@@ -8,8 +8,8 @@ AlgoriParams:
     ch2_max: 255
     ch3_min_r: 200
     ch3_max_r: 255
-    ch3_min_b: 30
-    ch3_max_b: 164
+    ch3_min_b: 40
+    ch3_max_b: 200
 
 CameraParams:
     rows: 480
@@ -39,3 +39,4 @@ MarkerParams:
 
 is_record: False
 ifshow: True
+if_calc_depth: True

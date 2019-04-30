@@ -8,37 +8,89 @@ using namespace std;
 clock_t begin_time[10];
 int Marker::ComputeKeyPoints()
 {
-  bool is_led0_left=(LEDs[1].center.x-LEDs[0].center.x)>0;
   int is_dir0_down=(LEDs[0].dir.dot(Point2f(0,1)))>0?1:-1;
   int is_dir1_down=(LEDs[1].dir.dot(Point2f(0,1)))>0?1:-1;
-  if(is_led0_left)
-  {
-    kpts[0]=LEDs[0].center -is_dir0_down* LEDs[0].dir*LEDs[0].width*0.5f;
-    kpts[2]=LEDs[0].center + is_dir0_down*LEDs[0].dir*LEDs[0].width*0.5f;
-    kpts[1]=LEDs[1].center - is_dir1_down*LEDs[1].dir*LEDs[1].width*0.5f;
-    kpts[3]=LEDs[1].center + is_dir1_down*LEDs[1].dir*LEDs[1].width*0.5f;
-  }else
-  {
-    kpts[0]=LEDs[1].center -is_dir0_down* LEDs[1].dir*LEDs[1].width*0.5f;
-    kpts[2]=LEDs[1].center + is_dir0_down*LEDs[1].dir*LEDs[1].width*0.5f;
-    kpts[1]=LEDs[0].center - is_dir1_down*LEDs[0].dir*LEDs[0].width*0.5f;
-    kpts[3]=LEDs[0].center + is_dir1_down*LEDs[0].dir*LEDs[0].width*0.5f;
-  }
+  kpts[0]=LEDs[0].center -is_dir0_down* LEDs[0].dir*LEDs[0].width*0.5f;
+  kpts[2]=LEDs[0].center + is_dir0_down*LEDs[0].dir*LEDs[0].width*0.5f;
+  kpts[1]=LEDs[1].center - is_dir1_down*LEDs[1].dir*LEDs[1].width*0.5f;
+  kpts[3]=LEDs[1].center + is_dir1_down*LEDs[1].dir*LEDs[1].width*0.5f;
 
   return 0;
 }
+int MarkSensor::calcDepth(Marker &res_marker)
+{
 
+  float marker_width = (float)norm(res_marker.LEDs[0].center - res_marker.LEDs[1].center);
+  float marker_height = (res_marker.LEDs[0].width + res_marker.LEDs[1].width)*0.5f;
+  int type = 0;	///infantry
+  if ((marker_width / marker_height) > 4)
+  {
+    type = 1;	// hero
+  }
+
+  // Read points
+  vector<Point2f> imagePoints ;
+  imagePoints.push_back(res_marker.kpts[0]);
+  imagePoints.push_back(res_marker.kpts[1]);
+  imagePoints.push_back(res_marker.kpts[2]);
+  imagePoints.push_back(res_marker.kpts[3]);
+
+
+  vector<Point3f> objectPoints;
+
+  if(type == 1)//大装甲
+  {
+    objectPoints.push_back(Point3f(-12.5, -3, 0.0));
+    objectPoints.push_back(Point3f(12.5, -3, 0.0));
+    objectPoints.push_back(Point3f(-12.5, 3, 0.0));
+    objectPoints.push_back(Point3f(12.5, 3, 0.0));
+  }
+
+  else//小装甲 或 没检测出型号
+  {
+    objectPoints.push_back(Point3f(-6.4, -2.6, 0.0));
+    objectPoints.push_back(Point3f(6.4, -2.6, 0.0));
+    objectPoints.push_back(Point3f(-6.4, 2.6, 0.0));
+    objectPoints.push_back(Point3f(6.4, 2.6, 0.0));
+  }
+
+
+  Mat rvec(3,1,cv::DataType<double>::type);
+  Mat tvec(3,1,cv::DataType<double>::type);
+
+  solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+
+  vector<Point2f> projectedPoints;
+  projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs, projectedPoints);
+  bool is_true_depth = true;
+  for(unsigned int i = 0; i < projectedPoints.size(); ++i)
+  {
+    if(imagePoints[i].x/projectedPoints[i].x>1.2 || imagePoints[i].x/projectedPoints[i].x<0.8 ||imagePoints[i].y/projectedPoints[i].y>1.2 || imagePoints[i].y/projectedPoints[i].y<0.8)
+    {
+      is_true_depth = false;
+      return -1;
+    }
+  }
+  if(is_true_depth)
+  {
+    Mat_<float> test;
+    tvec.convertTo(test, CV_32F);
+    res_marker.depth = test.at<float>(0, 2);
+
+  }else
+  {
+    printf("debug here!");
+  }
+
+
+  return res_marker.depth;
+}
 MarkSensor::MarkSensor(AlgoriParam &ap_,CamParams &cp_,MarkerParams &mp_):
   ap(ap_),cp(cp_),mp(mp_)
 {
   cameraMatrix = (cv::Mat_<double>(3,3) << cp.fx, 0, cp.cx, 0, cp.fy, cp.cy, 0, 0, 1);
   distCoeffs = (Mat_<double>(1,4) <<cp.distcoef1, cp.distcoef2, 0, 0);
 
-}
-void limitRect(Rect &location, Size sz)
-{
-  Rect window(Point(0, 0), sz);
-  location = location & window;
 }
 
 int MarkSensor::PCALEDStrip(vector<cv::Point> &contour, RotRect &LED)
@@ -90,15 +142,52 @@ int MarkSensor::paraDistance(RotRect &LED1, RotRect &LED2)  //if is parallel
   distance = fabs((LED1.center.x - cx2_para)*sin(theta));
   return distance;
 }
+int MarkSensor::tgt_selector(vector<Marker> &markers)
+{
+  int res_idx=0;
+  float minDist = 9999;
+  float maxArea =0;
+  for (int i = 0; i < markers.size(); i++) {
+
+    //first decision param: dist to principle point
+    Point2f camera_c(cp.cx, cp.cy);
+    Point2f marker_c((markers[i].LEDs[0].center + markers[i].LEDs[1].center)*0.5);
+    float dist2c = norm(camera_c - marker_c);
+
+    if (dist2c < minDist)
+    {
+      minDist = dist2c;
+      res_idx = i;
+    }
+
+
+    // second param: area of marker
+        markers[i].ComputeKeyPoints();
+        markers[i].ComputeBBox();
+      int area= markers[i].bbox.area();
+
+    //draw all the markers
+
+
+
+    //compute area
+    //rectangle(img_show, markers[i].bbox, Scalar(0, 0, 255));
+
+    //imshow("all markers", Img_show);
+    //waitKey(0);
+
+  }
+
+  return res_idx;
+
+}
+
 int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 {
 
   vector<vector<Point>> tmp_countours;
   vector<vector<Point>*> pContours;
   // 3 rad
-  float cos_marker_parallel_radian = cos(mp.marker_parallel_angle /RAD2DEG);
-  //  float cos_marker_vertical_radian = cos((90 - mp.marker_vertical_angle) /*RAD2DEG);
-  float cos_marker_direction_radian = cos(mp.marker_direction_angle /RAD2DEG);
   begin_time[0] = clock();
   findContours(roi_mask, tmp_countours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
   for (auto &contour : tmp_countours)
@@ -121,7 +210,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
       /// check ratio and length
       if (LED.width < mp.LED_widtch1_min || LED.width > mp.LED_widtch1_max) continue;
       //ADD MORE CONSTRAINTS!!
-      if (fabs(LED.dir.dot(cv::Point2f(1, 0))) >cos_marker_direction_radian)// degree
+      if (fabs(LED.dir.dot(cv::Point2f(1, 0))) >mp.cos_marker_direction_radian)// degree
       {
         continue;
       }
@@ -166,13 +255,13 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
         continue;
       }
       //check parallel
-      if (fabs(LEDs[i].dir.dot(LEDs[j].dir)) < cos_marker_parallel_radian)
+      if (fabs(LEDs[i].dir.dot(LEDs[j].dir)) < mp.cos_marker_parallel_radian)
       {
         //printf("LED parallel not satisfied !\n");
         continue;
       }
       /// check direction
-      if (fabs(c2c.dot(cv::Point2f(1, 0))) < cos_marker_direction_radian) {
+      if (fabs(c2c.dot(cv::Point2f(1, 0))) < mp.cos_marker_direction_radian) {
         //printf("Marker direction not satisfied !\n");
         continue;
       }
@@ -185,7 +274,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
       }
 
       /// build marker
-      Marker marker;
+      Marker tmp_marker;
       float marker_width = distance;
       float marker_height = (LEDs[i].width + LEDs[j].width)*0.5f;
       /// check marker width/height ratio
@@ -196,14 +285,14 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
       }
       matched[i] = matched[j] = true;
       if (c2c.x > 0) {
-        marker.LEDs[0] = LEDs[j];//0 on the left
-        marker.LEDs[1] = LEDs[i];
+        tmp_marker.LEDs[0] = LEDs[j];//0 on the left
+        tmp_marker.LEDs[1] = LEDs[i];
       }
       else {
-        marker.LEDs[0] = LEDs[i];
-        marker.LEDs[1] = LEDs[j];
+        tmp_marker.LEDs[0] = LEDs[i];
+        tmp_marker.LEDs[1] = LEDs[j];
       }
-      markers.push_back(marker);
+      markers.push_back(tmp_marker);
 
     }
 
@@ -217,37 +306,17 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
   }
   // decide which marker to shoot
   begin_time[3]=clock();
-  int res_idx = 0;
-  for (int i = 0; i < markers.size(); i++) {
-    float minDist = 999;
-
-    Point2f camera_c(cp.cx, cp.cy);
-    Point2f marker_c((markers[i].LEDs[0].center + markers[i].LEDs[1].center)*0.5);
-    float dist2c = norm(camera_c - marker_c);
-    if (dist2c < minDist)
-    {
-      minDist = dist2c;
-      res_idx = i;
-    }
-    //draw all the markers
-
-    //markers[i].ComputeKeyPoints();
-    //markers[i].ComputeBBox();
-    //rectangle(img_show, markers[i].bbox, Scalar(0, 0, 255));
-
-    //imshow("all markers", Img_show);
-    //waitKey(0);
-
-  }
+  int res_idx = tgt_selector(markers);
   res_marker = markers[res_idx];
+  res_marker.old_depth=0;
+  res_marker.depth=0;
+//  res_marker.ComputeKeyPoints();
+//  res_marker.ComputeBBox();
   std::cout <<"decide target : "<< float( clock () - begin_time[3] )/CLOCKS_PER_SEC<<"ms in size "<<markers.size()<<std::endl;
 
   return 0;
 }
-void MarkSensor::ShowMarkers(cv::Mat &roi_Mat, Marker &res_marker)
-{
 
-}
 int MarkSensor::DetectLEDMarker(const Mat &img, Marker &res_marker)
 {
   //img.copyTo(img_bgr);
@@ -259,24 +328,27 @@ int MarkSensor::DetectLEDMarker(const Mat &img, Marker &res_marker)
   std::cout <<" TO BINARY : "<< float( clock () - begin_time[4] )/CLOCKS_PER_SEC<<std::endl;
 
   //Mat led_erode;
-  //Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
-  //morphologyEx(led_mask, led_erode, MORPH_ERODE, element, Point(-1, -1), 1);
+//  Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
+//  morphologyEx(led_mask, led_mask, MORPH_CLOSE, element, Point(-1, -1), 1);
 
-  return GetLEDMarker(led_mask,res_marker);
+  bool is_detected=GetLEDMarker(led_mask,res_marker);
+  if(!is_detected)
+  {
+    dbg_save(img,ap.dbg_path,status);
+
+  }
+  return is_detected;
+
 }
 
 int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
 {
-  res_marker.ComputeKeyPoints();
-  res_marker.ComputeBBox();
   Rect &box = res_marker.bbox;
-  //limitRect(box, Size(640, 480));
-  //cv::Mat ROI_bgr = img(box);
 
-  float left = box.x - box.width;
-  float right = box.x + box.width * 2;
-  float top = box.y - box.height;
-  float bot = box.y + box.height * 2;
+  float left = box.x - status*box.width;
+  float right = box.x + box.width * (status+1);
+  float top = box.y - status*box.height;
+  float bot = box.y + box.height * (status+1);
   left = left < 0 ? 0 : left;
   right = right >= cp.cols ? cp.cols : right;
   top = top < 0 ? 0 : top;
@@ -291,6 +363,7 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   {
     printf("no marker for tracking!!");
     status = STATUS_DETECTING;
+    marker=Marker();
     return -1;
   }
   begin_time[4]=clock();
@@ -301,9 +374,10 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   /// Get Marker
   if (GetLEDMarker(ROI_led_mask, res_marker) != STATUS_SUCCESS) {
     printf("Get no marker!\n");
+        dbg_save(ROI_bgr,ap.dbg_path,status);
     return -1;
   }
-  //  ROI_show = ROI_bgr.clone();
+    ROI_show = ROI_led_mask.clone();
   //  if (mp.ifShow) {
   //    cv::imshow("track window", ROI_show);
   //  }
@@ -313,12 +387,12 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   res_marker.LEDs[1].center.y += ROI.y;
   ///draw the best marker
 
-
+  res_marker.ComputeKeyPoints();
+  res_marker.ComputeBBox();
   if (mp.ifShow)
   {
-    res_marker.ComputeKeyPoints();
-    res_marker.ComputeBBox();
-    img_out=img_show(res_marker.bbox);
+
+    //    img_out=img_show(res_marker.bbox);
     rectangle(img_show, res_marker.bbox, Scalar(0, 255, 0), 4);
 
 
@@ -327,26 +401,12 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   return 0;
 
 }
-string MarkSensor::num2str(double i)
 
-{
-  stringstream ss;
-  ss << i;
-  return ss.str();
-}
-int MarkSensor::dbg_save(const Mat &img)
-{
-  static int false_id = 0;
-
-  string saveName_dbg = "../dbg_imgs/" + num2str(false_id) + "false_track.jpg";
-  imwrite(saveName_dbg, img);
-  false_id++;
-  return 0;
-}
 int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, float &Z, int &type,int &pix_x,int &pix_y)
 {
   begin_time[6]=clock();
   img.copyTo(img_show);
+
   if (status == STATUS_DETECTING) {
     if (DetectLEDMarker(img, marker) == STATUS_SUCCESS) {
       status = STATUS_TRACKING;
@@ -357,18 +417,83 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
       return -1;
     }
   }
-  else {
+  else if(status==STATUS_TRACKING)
+  {
     if (TrackLEDMarker(img, marker) == STATUS_SUCCESS) {
       printf("Track Success!\n");
     }
     else {
       status = STATUS_DETECTING;
       printf("Track No target!\n");
-      //dbg_save(ROI_show);
+      track_fail_cnt[0]=0;
+//      marker=Marker();
       return -1;
     }
-  }
+  }else if(status==STATUS_TRACKLOST0)
+  {
+    if (TrackLEDMarker(img, marker) == STATUS_SUCCESS) {
+      printf("Track 0 Success!\n");
+      status = STATUS_TRACKING;
 
+    }
+    else {
+
+      printf("Track 0 No target!\n");
+      track_fail_cnt[0]++;
+      if(track_fail_cnt[0]>10)
+      {
+        status=STATUS_TRACKLOST1;
+        printf("enlarge ROI!");
+        track_fail_cnt[0]=0;
+        track_fail_cnt[1]=0;
+      }
+//      marker=Marker();
+      return -1;
+    }
+
+  }else if(status==STATUS_TRACKLOST1)
+  {
+    if (TrackLEDMarker(img, marker) == STATUS_SUCCESS) {
+      printf("Track 0 Success!\n");
+      status = STATUS_TRACKING;
+
+    }
+    else {
+      printf("Track 1 No target!\n");
+      track_fail_cnt[1]++;
+      if(track_fail_cnt[1]>10)
+      {
+        status=STATUS_TRACKLOST2;
+        printf("ROI enlarge again!");
+        track_fail_cnt[1]=10;
+        track_fail_cnt[2]=0;
+      }
+//    marker=Marker();
+      return -1;
+    }
+
+  }else if(status==STATUS_TRACKLOST2)
+  {
+    if (TrackLEDMarker(img, marker) == STATUS_SUCCESS) {
+      printf("Track 0 Success!\n");
+      status = STATUS_TRACKING;
+
+    }
+    else {
+      printf("Track 0 No target!\n");
+      track_fail_cnt[2]++;
+      if(track_fail_cnt[2]>10)
+      {
+        status=STATUS_DETECTING;
+        printf("failed to find marker in ROI");
+        track_fail_cnt[2]=0;
+        marker=Marker();
+      }
+
+      return -1;
+    }
+
+  }
 
   ///update pix position
   target = (marker.LEDs[0].center + marker.LEDs[1].center)*0.5f;
@@ -379,87 +504,27 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   ///update 3d position
 
 
-  begin_time[5]=clock();
-  float marker_width = (float)norm(marker.LEDs[0].center - marker.LEDs[1].center);
-  float marker_height = (marker.LEDs[0].width + marker.LEDs[1].width)*0.5f;
-  type = 0;	///infantry
-  if ((marker_width / marker_height) > 4)
+  int depth;
+  if(mp.if_calc_depth)
   {
-    type = 1;	// hero
-  }
-
-  // Read points
-  vector<Point2f> imagePoints ;
-  imagePoints.push_back(marker.kpts[0]);
-  imagePoints.push_back(marker.kpts[1]);
-  imagePoints.push_back(marker.kpts[2]);
-  imagePoints.push_back(marker.kpts[3]);
-
-
-  vector<Point3f> objectPoints;
-
-  if(type == 1)//大装甲
-  {
-    objectPoints.push_back(Point3f(-12.5, -3, 0.0));
-    objectPoints.push_back(Point3f(12.5, -3, 0.0));
-    objectPoints.push_back(Point3f(-12.5, 3, 0.0));
-    objectPoints.push_back(Point3f(12.5, 3, 0.0));
-  }
-
-  else//小装甲 或 没检测出型号
-  {
-    objectPoints.push_back(Point3f(-6.4, -2.6, 0.0));
-    objectPoints.push_back(Point3f(6.4, -2.6, 0.0));
-    objectPoints.push_back(Point3f(-6.4, 2.6, 0.0));
-    objectPoints.push_back(Point3f(6.4, 2.6, 0.0));
-  }
-
-
-  Mat rvec(3,1,cv::DataType<double>::type);
-  Mat tvec(3,1,cv::DataType<double>::type);
-
-  solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
-
-  vector<Point2f> projectedPoints;
-  projectPoints(objectPoints, rvec, tvec, cameraMatrix, distCoeffs, projectedPoints);
-  bool is_true_depth = true;
-  for(unsigned int i = 0; i < projectedPoints.size(); ++i)
-  {
-    if(imagePoints[i].x/projectedPoints[i].x>1.2 || imagePoints[i].x/projectedPoints[i].x<0.8 ||imagePoints[i].y/projectedPoints[i].y>1.2 || imagePoints[i].y/projectedPoints[i].y<0.8)
-    {
-      is_true_depth = false;
-      break;
-    }
-  }
-  if(is_true_depth)
-  {
-    Mat_<float> test;
-    tvec.convertTo(test, CV_32F);
-    depth = test.at<float>(0, 2);
-  }
-
-  //	depth = (real_L*focal_length) / (marker_width);
-
-  if (old_depth > 0) {
-    printf("old_depth:%f new_depth:%f", old_depth, depth);
-    depth = 0.6f*depth + 0.4f*old_depth;    //TODO: 1. Turn the params 2. Kalman filter
-    old_depth = depth;
-    printf(" filtered_depth:%f\n", depth);
-  }
-  else {
-    old_depth = depth;
+    begin_time[5]=clock();
+    depth=calcDepth(marker);
   }
 
   float tanX=(target.x - cp.cx) / cp.fx;
   float tanY=(target.y - cp.cy) / cp.fy;
   angX=atan(tanX)*RAD2DEG;
   angY=atan(tanX)*RAD2DEG;
-  Z = depth;
-  float X = tanX*Z;
-  float Y = tanY*Z;
-  std::cout <<" calculate depth : "<< float( clock () - begin_time[5] )/CLOCKS_PER_SEC<<std::endl;
+  if(mp.if_calc_depth)
+  {
+    Z = depth;
+    float X = tanX*Z;
+    float Y = tanY*Z;
+    printf("Get target: %f %f %f type: %d\n", X, Y, Z, type);
+    std::cout <<" calculate depth : "<< float( clock () - begin_time[5] )/CLOCKS_PER_SEC<<std::endl;
 
-  printf("Get target: %f %f %f type: %d\n", X, Y, Z, type);
+  }
+
   std::cout <<" process 1 frame : "<< float( clock () - begin_time[6] )/CLOCKS_PER_SEC<<std::endl;
 
   return 0;

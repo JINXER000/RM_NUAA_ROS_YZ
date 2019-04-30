@@ -9,7 +9,7 @@
 #include <iostream>
 #include <ros/ros.h>
 using namespace std;
-
+#define RAD2DEG 57.32
 
 class AlgoriParam
 {
@@ -17,7 +17,7 @@ class AlgoriParam
   ros::NodeHandle nh_;
   bool is_red;
   int  ch1_min,ch1_max,ch2_min,ch2_max,ch3_min,ch3_max;
-
+  string dbg_path;
   AlgoriParam();
   AlgoriParam(bool is_red_,
               int  ch1_min_,
@@ -63,11 +63,11 @@ public:
      float marker_direction_angle;
      float marker_ratio_min, marker_ratio_max;
      float marker_size_min, marker_size_max;
+     float cos_marker_parallel_radian,cos_marker_direction_radian,cos_marker_vertical_radian;
 
 
 
-
-   bool ifShow;
+   bool ifShow,if_calc_depth=1;
 
   MarkerParams(bool ifShow);
 };

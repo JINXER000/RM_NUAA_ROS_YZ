@@ -14,7 +14,7 @@ using namespace std;
 #include "video_saver.h"
 using namespace std;
 using namespace cv;
-
+Size dist_size=Size(640,480);
 class MVCamNode
 {
 public:
@@ -31,7 +31,7 @@ public:
       white_balance_, gain_;
   bool large_resolution_=true,is_record_=false,autofocus_, autoexposure_=false, auto_white_balance_;
   VideoSaver saver;
- clock_t begin_time;
+  clock_t begin_time;
   MVCamNode():
     node_("~")
   {
@@ -99,11 +99,13 @@ public:
        ROS_WARN("NO IMG GOT FROM MV");
        return false;
      }
- std::cout<<"take image timefly"<<clock()-begin_time<<std::endl;
+ std::cout<<"take image timefly"<<float( clock () - begin_time )/CLOCKS_PER_SEC<<std::endl;
+ begin_time= clock();
      if(is_record_)
      {
        saver.write(rawImg);
      }
+
 //    imshow("raw img from MV cam",rawImg);
 //    waitKey(1);
     msg= cv_bridge::CvImage(std_msgs::Header(), "bgr8", rawImg).toImageMsg();

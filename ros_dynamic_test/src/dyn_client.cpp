@@ -34,8 +34,10 @@ void dynCallBack(const my_msgs::tutorialsConfig &data)
   cfg_msg.ch1_max_b=data.ch1_max_b;
   cfg_msg.ch2_min=data.ch2_min;
   cfg_msg.ch2_max=data.ch2_max;
-  cfg_msg.ch3_min=data.ch3_min;
-  cfg_msg.ch3_max=data.ch3_max;
+  cfg_msg.ch3_min_r=data.ch3_min_r;
+  cfg_msg.ch3_max_r=data.ch3_max_r;
+  cfg_msg.ch3_min_b=data.ch3_min_b;
+  cfg_msg.ch3_max_b=data.ch3_max_b;
 
   exp_time_msg.data=data.exp_time;
   is_large_msg.data=data.is_large_resolution;
