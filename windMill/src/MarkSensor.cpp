@@ -146,37 +146,73 @@ int MarkSensor::tgt_selector(vector<Marker> &markers)
 {
   int res_idx=0;
   float minDist = 9999;
-  float maxArea =0;
   for (int i = 0; i < markers.size(); i++) {
+    //calc some important params
+    markers[i].ComputeKeyPoints();
+    markers[i].ComputeBBox();
+    //decide marker type
+    float wid_div_height=markers[i].bbox.width/markers[i].bbox.height;
+    if(wid_div_height>3.5)
+    {
+        markers[i].armor_type=Marker::BIG;
+    }else
+    {
+        markers[i].armor_type=Marker::SMALL;
+    }
 
-    //first decision param: dist to principle point
+
+    //first decision param: dist to principle point. 400->0.2,0-->1
     Point2f camera_c(cp.cx, cp.cy);
     Point2f marker_c((markers[i].LEDs[0].center + markers[i].LEDs[1].center)*0.5);
     float dist2c = norm(camera_c - marker_c);
 
-    if (dist2c < minDist)
-    {
-      minDist = dist2c;
-      res_idx = i;
-    }
+    float decide_p1=MAX(1-0.002*dist2c,0);
+//    if (dist2c < minDist)
+//    {
+//      minDist = dist2c;
+//      res_idx = i;
+//    }
 
 
     // second param: area of marker
-        markers[i].ComputeKeyPoints();
-        markers[i].ComputeBBox();
       int area= markers[i].bbox.area();
+    float decide_p2=MIN(0.001*area+0.1, 1);
+
+    // third param: leaky angle of armor
+//    float leaky_angle=fabs((markers[i].LEDs[0].center.y -markers[i].LEDs[1].center.y)/markers[i].bbox.width);
+    float leaky_angle=MIN(markers[i].LEDs[0].height/markers[i].LEDs[1].height,markers[i].LEDs[1].height/markers[i].LEDs[0].height);
+    float decide_p3;
+    if(markers[i].armor_type==Marker::SMALL)
+    {
+      decide_p3=1.333*leaky_angle-0.333;  //1-->1, 0.25-->0
+    }else
+    {
+      decide_p3=1.5*leaky_angle-0.5;      //1--->1, 0.5--->0
+    }
+
+     markers[i].decision_points=0.5*decide_p1+decide_p2+decide_p3;
+
 
     //draw all the markers
 
 
 
-    //compute area
-    //rectangle(img_show, markers[i].bbox, Scalar(0, 0, 255));
+     if (mp.ifShow)
 
-    //imshow("all markers", Img_show);
-    //waitKey(0);
+          rectangle(img_show, markers[i].bbox, Scalar(0, 0, 255),2);
 
   }
+  float max_points=0;
+  for  (int j = 0; j < markers.size(); j++) {
+    if (markers[j].decision_points > max_points)
+    {
+      max_points = markers[j].decision_points;
+      res_idx = j;
+    }
+
+  }
+  if (mp.ifShow)
+        rectangle(img_show, markers[res_idx].bbox, Scalar(0, 128, 128),2);
 
   return res_idx;
 
@@ -393,7 +429,7 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   {
 
     //    img_out=img_show(res_marker.bbox);
-    rectangle(img_show, res_marker.bbox, Scalar(0, 255, 0), 4);
+    rectangle(img_show, res_marker.bbox, Scalar(0, 255, 0), 2);
 
 
   }

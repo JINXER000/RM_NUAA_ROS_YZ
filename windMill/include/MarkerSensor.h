@@ -36,16 +36,11 @@ public:
 		center.y = rect.y + rect.height*0.5f;
 		dir.x = 1;
 		dir.y = 0;
-	};
+  }
 };
 
 class Marker {
 public:
-	RotRect   LEDs[2];
-	Point2f   kpts[4];
-	Rect      bbox;
-  float decision_params[3];
-  float   old_depth, depth;
 
   Marker()
   {
@@ -53,6 +48,11 @@ public:
     depth=0;
 
   }
+  enum MarkerType {
+    All = 0,
+    SMALL= 1,
+    BIG=2
+  };
   int ComputeKeyPoints();
 	int ComputeBBox()
 	{
@@ -91,6 +91,14 @@ public:
 		return 0;
 	}
 
+  RotRect   LEDs[2];
+  Point2f   kpts[4];
+  Rect      bbox;
+  float decision_points;
+  float   old_depth, depth;
+  MarkerType armor_type;
+
+
 };
 class MarkSensor {
 public :
@@ -102,11 +110,7 @@ public :
     STATUS_TRACKLOST2,
     STATUS_DETECTING
 	};
-	enum MarkerType {
-		All = 0,
-		RED = 1,
-		BLUE=2
-	};
+
   MarkSensor(AlgoriParam &ap_,CamParams &cp_, MarkerParams &mp_);
 	//MarkSensor(const string & calibration, const string & config, const string & cascade);
   int ProcessFrameLEDXYZ(const Mat & img, float & angX, float & angY, float & Z, int &type, int &pix_x, int &pix_y);

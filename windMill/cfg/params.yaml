@@ -1,5 +1,5 @@
 AlgoriParams:
-    is_enemy_red: False
+    is_enemy_red: True
     ch1_min_r: 14
     ch1_max_r: 240
     ch1_min_b: 190
