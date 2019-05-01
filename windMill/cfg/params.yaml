@@ -23,20 +23,21 @@ CameraParams:
     distcoef2: 0.0882
 
 MarkerParams:
-    contours_lengtch1_min:  10
-    contours_lengtch1_max:  300
-    LED_ratio_min:  2
+    contours_lengtch1_min:  10    #LED contour size
+    contours_lengtch1_max:  250
+    LED_ratio_min:  2        # chang div kuan
     LED_ratio_max:  20
-    LED_widtch1_min:  7
+    LED_widtch1_min:  7        # width in pixel
     LED_widtch1_max:  100
-    marker_parallel_angle:  6
-    marker_vertical_angle:  10
-    marker_direction_angle:  45
-    marker_ratio_min:  0.8
+    marker_parallel_angle:  6     # angle between 2 led
+    marker_vertical_angle:  10     # no use
+    marker_direction_angle:  40    # angle between c2c and horizon
+    marker_ratio_min:  0.8    #  width / height
     marker_ratio_max:  5
-    marker_size_min:  10
+    marker_size_min:  10    #  c2c distance
     marker_size_max:  200
 
 is_record: False
 ifshow: True
-if_calc_depth: True
+if_calc_depth: False
+if_analyze_motion: True

@@ -165,32 +165,32 @@ public:
     }
 
     // Update GUI Window
-    //    if(ifshow)
-    //    {
-    //        cv::imshow("detection result", markSensor->img_show);
-    //        //    if(!markSensor.img_out.empty())
-    //        //      cv::imshow("feed to number", markSensor.img_out);
-    //        char key=cv::waitKey(1);
-    //        if(key=='q' ||key=='Q')
-    //        {
-    //            //send SIGINT
-    //            system("pkill roslaunch");
-    //        }
+        if(ifshow)
+        {
+            cv::imshow("detection result", markSensor->img_show);
+            //    if(!markSensor.img_out.empty())
+            //      cv::imshow("feed to number", markSensor.img_out);
+            char key=cv::waitKey(1);
+            if(key=='q' ||key=='Q')
+            {
+                //send SIGINT
+                system("pkill roslaunch");
+            }
 
-    //    }
+        }
 
     serial_pub.publish(tgt_pos);
     // Output modified video stream
 
     if(ifshow)
     {
-      sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_show).toImageMsg();
-      show_img_msg->header.stamp=ros::Time::now();
-      show_image_pub_.publish(show_img_msg);
+//      sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_show).toImageMsg();
+//      show_img_msg->header.stamp=ros::Time::now();
+//      show_image_pub_.publish(show_img_msg);
 
-      sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->led_mask).toImageMsg();
-      binary_img_msg->header.stamp=ros::Time::now();
-      binary_image_pub_.publish(binary_img_msg);
+//      sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->led_mask).toImageMsg();
+//      binary_img_msg->header.stamp=ros::Time::now();
+//      binary_image_pub_.publish(binary_img_msg);
 
 //      sensor_msgs::ImagePtr roi_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->ROI_show).toImageMsg();
 //      roi_img_msg->header.stamp = ros::Time::now();

@@ -81,14 +81,14 @@ public:
     //    if(!markSensor.img_out.empty())
     //      cv::imshow("feed to number", markSensor.img_out);
     char key=cv::waitKey(1);
-    if (key == 's') {
-      false_idx++;
-      string saveName_src =
-          dbg_img_path + num2str(false_idx) + "falsesrc.jpg";
+//    if (key == 's') {
+//      false_idx++;
+//      string saveName_src =
+//          dbg_img_path + num2str(false_idx) + "falsesrc.jpg";
 
-      std::cout<<saveName_src<<endl;
-      imwrite(saveName_src, img_show);
-    }
+//      std::cout<<saveName_src<<endl;
+//      imwrite(saveName_src, img_show);
+//    }
     if(key=='q' ||key=='Q')
     {
       //send SIGINT

@@ -48,6 +48,7 @@
  {
    ifShow=ifshow_;
    nh_.getParam("/if_calc_depth",if_calc_depth);
+   nh_.getParam("/if_analyze_motion",if_analyze_motion);
    nh_.getParam("/MarkerParams/contours_lengtch1_min",contours_lengtch1_min);
    nh_.getParam("/MarkerParams/contours_lengtch1_max",contours_lengtch1_max);
    nh_.getParam("/MarkerParams/LED_ratio_min",LED_ratio_min);

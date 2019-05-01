@@ -110,7 +110,12 @@ public :
     STATUS_TRACKLOST2,
     STATUS_DETECTING
 	};
-
+  enum EnemyStatus {
+    STATIC_POS = 0,
+    MOVING= 1,
+    SWAGGING=2,
+    ROTATING=3
+  };
   MarkSensor(AlgoriParam &ap_,CamParams &cp_, MarkerParams &mp_);
 	//MarkSensor(const string & calibration, const string & config, const string & cascade);
   int ProcessFrameLEDXYZ(const Mat & img, float & angX, float & angY, float & Z, int &type, int &pix_x, int &pix_y);
@@ -125,6 +130,7 @@ public :
   int tgt_selector(vector<Marker> &markers);
 	int GammaCorrect();
   int calcDepth(Marker &marker);
+  int judge_motion();
   AlgoriParam ap;
   CamParams cp;
   MarkerParams mp;
@@ -137,6 +143,8 @@ public :
 	static Mat img_show,ROI_show;
 	Point2f old_target, target;
   int track_fail_cnt[3];
+  EnemyStatus enemy_stat;
+  deque<float> leaky_list;
 };
 
 class HaarD

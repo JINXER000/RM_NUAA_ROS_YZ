@@ -67,7 +67,7 @@ public:
 
 
 
-   bool ifShow,if_calc_depth=1;
+   bool ifShow,if_calc_depth=0,if_analyze_motion=0;
 
   MarkerParams(bool ifShow);
 };

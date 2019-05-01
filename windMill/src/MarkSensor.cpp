@@ -145,6 +145,7 @@ int MarkSensor::paraDistance(RotRect &LED1, RotRect &LED2)  //if is parallel
 int MarkSensor::tgt_selector(vector<Marker> &markers)
 {
   int res_idx=0;
+
   float minDist = 9999;
   for (int i = 0; i < markers.size(); i++) {
     //calc some important params
@@ -154,10 +155,10 @@ int MarkSensor::tgt_selector(vector<Marker> &markers)
     float wid_div_height=markers[i].bbox.width/markers[i].bbox.height;
     if(wid_div_height>3.5)
     {
-        markers[i].armor_type=Marker::BIG;
+      markers[i].armor_type=Marker::BIG;
     }else
     {
-        markers[i].armor_type=Marker::SMALL;
+      markers[i].armor_type=Marker::SMALL;
     }
 
 
@@ -167,39 +168,48 @@ int MarkSensor::tgt_selector(vector<Marker> &markers)
     float dist2c = norm(camera_c - marker_c);
 
     float decide_p1=MAX(1-0.002*dist2c,0);
-//    if (dist2c < minDist)
-//    {
-//      minDist = dist2c;
-//      res_idx = i;
-//    }
+    //    if (dist2c < minDist)
+    //    {
+    //      minDist = dist2c;
+    //      res_idx = i;
+    //    }
 
-
-    // second param: area of marker
-      int area= markers[i].bbox.area();
-    float decide_p2=MIN(0.001*area+0.1, 1);
-
-    // third param: leaky angle of armor
-//    float leaky_angle=fabs((markers[i].LEDs[0].center.y -markers[i].LEDs[1].center.y)/markers[i].bbox.width);
-    float leaky_angle=MIN(markers[i].LEDs[0].height/markers[i].LEDs[1].height,markers[i].LEDs[1].height/markers[i].LEDs[0].height);
-    float decide_p3;
-    if(markers[i].armor_type==Marker::SMALL)
+    if(status!=STATUS_DETECTING)
     {
-      decide_p3=1.333*leaky_angle-0.333;  //1-->1, 0.25-->0
-    }else
-    {
-      decide_p3=1.5*leaky_angle-0.5;      //1--->1, 0.5--->0
+      markers[i].decision_points=decide_p1;
     }
 
-     markers[i].decision_points=0.5*decide_p1+decide_p2+decide_p3;
+    else
+    {
+      // second param: area of marker
+      int area= markers[i].bbox.area();
+      float decide_p2=MIN(0.001*area+0.1, 1);
+
+      // third param: leaky angle of armor
+      //    float leaky_angle=fabs((markers[i].LEDs[0].center.y -markers[i].LEDs[1].center.y)/markers[i].bbox.width);
+      float leaky_angle=MIN(markers[i].LEDs[0].width/markers[i].LEDs[1].width,markers[i].LEDs[1].width/markers[i].LEDs[0].width);
+      float decide_p3;
+      if(markers[i].armor_type==Marker::SMALL)
+      {
+        decide_p3=1.333*leaky_angle-0.333;  //1-->1, 0.25-->0
+      }else
+      {
+        decide_p3=1.5*leaky_angle-0.5;      //1--->1, 0.5--->0
+      }
+
+      markers[i].decision_points=0.5*decide_p1+decide_p2+decide_p3;
+
+    }
+
 
 
     //draw all the markers
 
 
 
-     if (mp.ifShow)
+    if (mp.ifShow&&status==STATUS_DETECTING)
 
-          rectangle(img_show, markers[i].bbox, Scalar(0, 0, 255),2);
+      rectangle(img_show, markers[i].bbox, Scalar(0, 0, 255),2);
 
   }
   float max_points=0;
@@ -211,8 +221,8 @@ int MarkSensor::tgt_selector(vector<Marker> &markers)
     }
 
   }
-  if (mp.ifShow)
-        rectangle(img_show, markers[res_idx].bbox, Scalar(0, 128, 128),2);
+  if (mp.ifShow&&status==STATUS_DETECTING)
+    rectangle(img_show, markers[res_idx].bbox, Scalar(0, 128, 128),2);
 
   return res_idx;
 
@@ -250,7 +260,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
       {
         continue;
       }
-      float ratio = LED.width / LED.height;
+      float ratio = LED.width / LED.height;   //>1
       if (ratio < mp.LED_ratio_min || ratio > mp.LED_ratio_max) continue;
       LEDs.push_back(LED);
     }
@@ -279,7 +289,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
       float led_diff = fabs(LEDs[i].width - LEDs[j].width) / max_width;
 
       if (led_diff > 0.3) {
-        //printf("LED difference not satisfied !\n");
+        //printf("LED difference not satisfied !\n");  491,408,514,510// 56,170 ,91,175
         continue;
       }
       //check distance
@@ -297,7 +307,8 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
         continue;
       }
       /// check direction
-      if (fabs(c2c.dot(cv::Point2f(1, 0))) < mp.cos_marker_direction_radian) {
+      cv::Point2f direction=c2c/distance;
+      if (fabs(direction.dot(cv::Point2f(1, 0))) < mp.cos_marker_direction_radian) {
         //printf("Marker direction not satisfied !\n");
         continue;
       }
@@ -346,8 +357,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
   res_marker = markers[res_idx];
   res_marker.old_depth=0;
   res_marker.depth=0;
-//  res_marker.ComputeKeyPoints();
-//  res_marker.ComputeBBox();
+
   std::cout <<"decide target : "<< float( clock () - begin_time[3] )/CLOCKS_PER_SEC<<"ms in size "<<markers.size()<<std::endl;
 
   return 0;
@@ -364,13 +374,13 @@ int MarkSensor::DetectLEDMarker(const Mat &img, Marker &res_marker)
   std::cout <<" TO BINARY : "<< float( clock () - begin_time[4] )/CLOCKS_PER_SEC<<std::endl;
 
   //Mat led_erode;
-//  Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
-//  morphologyEx(led_mask, led_mask, MORPH_CLOSE, element, Point(-1, -1), 1);
+  //  Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
+  //  morphologyEx(led_mask, led_mask, MORPH_CLOSE, element, Point(-1, -1), 1);
 
   bool is_detected=GetLEDMarker(led_mask,res_marker);
   if(!is_detected)
   {
-    dbg_save(img,ap.dbg_path,status);
+//    dbg_save(img,ap.dbg_path,status);
 
   }
   return is_detected;
@@ -410,13 +420,13 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   /// Get Marker
   if (GetLEDMarker(ROI_led_mask, res_marker) != STATUS_SUCCESS) {
     printf("Get no marker!\n");
-        dbg_save(ROI_bgr,ap.dbg_path,status);
+//    dbg_save(ROI_bgr,ap.dbg_path,status);
     return -1;
   }
-    ROI_show = ROI_led_mask.clone();
-  //  if (mp.ifShow) {
-  //    cv::imshow("track window", ROI_show);
-  //  }
+  ROI_show = ROI_led_mask.clone();
+    if (mp.ifShow) {
+      cv::imshow("track window", ROI_bgr);
+    }
   res_marker.LEDs[0].center.x += ROI.x;
   res_marker.LEDs[0].center.y += ROI.y;
   res_marker.LEDs[1].center.x += ROI.x;
@@ -427,15 +437,102 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   res_marker.ComputeBBox();
   if (mp.ifShow)
   {
-
     //    img_out=img_show(res_marker.bbox);
     rectangle(img_show, res_marker.bbox, Scalar(0, 255, 0), 2);
-
-
   }
 
   return 0;
 
+}
+int MarkSensor::judge_motion()
+{
+  float ratio_spd_threth=0.08;
+  float ratio_jump_threth=0.18;
+  deque<float> extrem_list;
+  deque<int> direction_list;
+
+  int direction_flag;   //left:-1, right::1
+  int step=2;
+  for(int i=0;i<leaky_list.size();i+=step)
+  {
+
+    float tmp_spd=leaky_list[i+1]-leaky_list[i];
+    if(tmp_spd<ratio_spd_threth&&tmp_spd>0)    //spd is smooth and positive
+    {
+      direction_flag=1;
+    }else if((tmp_spd>-ratio_spd_threth)&&tmp_spd<0)   //spd is smooth and negative
+    {
+      direction_flag=-1;
+    }else
+    {
+      direction_flag=0;   //we cannot tell
+    }
+    direction_list.push_back(direction_flag);
+
+    if(i>0&&fabs(tmp_spd)>ratio_jump_threth)  // jump to another side
+    {
+      extrem_list.push_back(i);
+    }
+
+
+
+  }
+
+  if(extrem_list.size()<4)
+  {
+    printf("extrem elem too small");
+    enemy_stat=MOVING;
+    return -1;
+  }
+  //ratio will fluctuate in certain frequncy if swag or rotate
+  //then we can use direction to differ them
+  int gap_scale,gap_scale_old=extrem_list[1]-extrem_list[0];
+  deque<int> accurate_direct;
+  for(int j=1;j<(extrem_list.size()-1);j++)
+  {
+    gap_scale=extrem_list[j+1]-extrem_list[j];
+    if(gap_scale<8)    // may be noise
+    {
+      continue;
+    }
+    float gap_ratio=gap_scale/gap_scale_old;
+    gap_scale_old=gap_scale;
+    if(gap_ratio>1.3&&gap_ratio<0.77)
+    {
+      printf("no regular pattern");
+      enemy_stat=MOVING;
+      return -1;
+    }
+    //calculate direction pattern
+    int round_direct=0,left_cnt=0,right_cnt=0;
+    for(int k=extrem_list[j-1];k<extrem_list[j];k++)
+    {
+        if(direction_list[k]>0)
+        {
+          right_cnt++;
+        }else if(direction_list[k]<0)
+        {
+          left_cnt++;
+        }
+    }
+    if(right_cnt>(left_cnt+4))
+    {
+      round_direct=1;
+    }else if(right_cnt<(left_cnt-4))
+    {
+      round_direct=-1;
+    }else
+    {
+      round_direct=0;
+    }
+
+    accurate_direct.push_back(round_direct);
+
+  }
+
+
+
+  return 0;
 }
 
 int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, float &Z, int &type,int &pix_x,int &pix_y)
@@ -459,10 +556,10 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
       printf("Track Success!\n");
     }
     else {
-      status = STATUS_DETECTING;
+      status = STATUS_TRACKLOST0;
       printf("Track No target!\n");
       track_fail_cnt[0]=0;
-//      marker=Marker();
+      //      marker=Marker();
       return -1;
     }
   }else if(status==STATUS_TRACKLOST0)
@@ -483,7 +580,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
         track_fail_cnt[0]=0;
         track_fail_cnt[1]=0;
       }
-//      marker=Marker();
+      //      marker=Marker();
       return -1;
     }
 
@@ -504,7 +601,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
         track_fail_cnt[1]=10;
         track_fail_cnt[2]=0;
       }
-//    marker=Marker();
+      //    marker=Marker();
       return -1;
     }
 
@@ -560,7 +657,27 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
     std::cout <<" calculate depth : "<< float( clock () - begin_time[5] )/CLOCKS_PER_SEC<<std::endl;
 
   }
+  /// analyze motion
+  if(mp.if_analyze_motion)
+  {
+    if(status!=STATUS_DETECTING)
+    {
+      float leaky_ratio=marker.LEDs[0].width/marker.LEDs[1].width;
+      leaky_list.push_back(leaky_ratio);
+      if(leaky_list.size()>100)
+      {
 
+        judge_motion();
+        leaky_list.pop_front();
+
+      }
+
+    }else if(leaky_list.size()>0)
+    {
+      leaky_list.clear();
+    }
+
+  }
   std::cout <<" process 1 frame : "<< float( clock () - begin_time[6] )/CLOCKS_PER_SEC<<std::endl;
 
   return 0;
@@ -623,7 +740,6 @@ bool HaarD::Detect_track( const Mat & img, float & X, float & Y, float & Z, int 
     }
     if (frame_num % 10 == 0)
     {
-      //��ͼƬ��Χ����Ѱ��
       int factor = 3;
       int newx = location.x + (1 - factor) * location.width / 2;
       int newy = location.y + (1 - factor) * location.height / 2;
@@ -644,7 +760,7 @@ bool HaarD::Detect_track( const Mat & img, float & X, float & Y, float & Z, int 
       else
       {
         if (boards.size() > 0)
-          boards = color_filter(img, boards, color_flag);//��ɫ�˲��жϵ���.,,..
+          boards = color_filter(img, boards, color_flag);
         if (boards.size() > 0){
           location = Rect(boards[0].x + loc.x, boards[0].y + loc.y, boards[0].width, boards[0].height);
           tracker.initTracking(img, location);

@@ -91,6 +91,8 @@ int main(int argc, char **argv)
       std::cout<<"video ends"<<std::endl;
       break;
     }
+    //debug 1 image
+//    frame=imread(dbg_img_path+"0falsesrc3.jpg");
     if(is_video_dbg)
     {
       imshow("raw img",frame);
@@ -103,18 +105,16 @@ int main(int argc, char **argv)
         std::cout<<saveName_src<<endl;
         imwrite(saveName_src, frame);
       }
-    }else
-    {
+    }
       //将opencv的图片转换成ros的sensor_msgs，然后才能发布。
     if(Size(frame.cols,frame.rows)!=dist_size)
        resize(frame, frame, dist_size);
       sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
 
       pub.publish(msg);
-      frame_cnt++;
-      if(frame_cnt>1000)
-        break;
-    }
+//      frame_cnt++;
+//      if(frame_cnt>1000)
+//        break;
     ros::spinOnce();
     loop_rate.sleep();
   }
