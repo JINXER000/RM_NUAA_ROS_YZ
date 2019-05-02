@@ -17,6 +17,7 @@
 #include<memory>
 #include "MarkerParams.h"
 #include "utils.h"
+#include "tf/tf.h"
 
 using namespace std;
 using namespace cv;
@@ -140,9 +141,14 @@ public :
   SensorStatus status= STATUS_DETECTING;
   Marker marker;
 	Mat img_gray, img_bgr, img_hsv, img_h, led_mask,img_out;
-	static Mat img_show,ROI_show;
+  static Mat img_show,ROI_bgr;
 	Point2f old_target, target;
   int track_fail_cnt[3];
+  tf::Transform trans;
+  bool got_trans=false;
+  tf::Vector3 pos_t2w;
+  tf::Vector3 pos_t2c;
+  //for motion analyse
   EnemyStatus enemy_stat;
   deque<float> leaky_list;
 };

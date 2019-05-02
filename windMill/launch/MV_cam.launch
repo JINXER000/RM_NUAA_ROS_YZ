@@ -1,8 +1,13 @@
 <launch>
-    <node pkg="windMill" type="windMill_node" name="windMill" output="screen" required="true"  launch-prefix="xterm -e"/>
+<param name="rcd_path" value="$(find windMill)/../../../../video_rcd/"/>
+<param name="dbg_img_path" value="$(find windMill)/../../../../dbg_img/"/>
+
+    <node pkg="windMill" type="windMill_node" name="windMill" output="screen" required="true" />
 <!--    <node pkg="numPred" type="numPred_node.py" name="numPred" output="screen" />-->
     <node pkg="mv_driver" type="mv_driver_node" name="mv_driver_node" output="screen" respawn="true" />
     <node pkg="serial_common" type="serial_common_node" name="serial_common_node" output="screen" />
+    <node pkg="img_displayer" type="img_displayer_node" name="img_displayer" output="screen"  />
+
    <rosparam command="load" file="$(find windMill)/cfg/params.yaml" />
 
 </launch>

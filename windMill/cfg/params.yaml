@@ -11,16 +11,50 @@ AlgoriParams:
     ch3_min_b: 40
     ch3_max_b: 200
 
-CameraParams:
+CameraParams_1_big:
+    rows: 512
+    cols: 640
+    fps: 200
+    cx: 322.6
+    cy: 255.4
+    fx: 429
+    fy: 427.3
+    distcoef1: -0.0627
+    distcoef2: 0.0605
+
+CameraParams_1_small:
     rows: 480
     cols: 640
-    fps: 100
-    cx: 317.2613
-    cy: 243.82
-    fx: 442.2
-    fy: 414.46
-    distcoef1: -0.0906
-    distcoef2: 0.0882
+    fps: 400
+    cx: 325.9
+    cy: 249.4
+    fx: 862.8
+    fy: 859.5
+    distcoef1: -0.0839
+    distcoef2: 0.123
+
+CameraParams_2_big:
+    rows: 512
+    cols: 640
+    fps: 200
+    cx: 318.3
+    cy: 258
+    fx: 440.5
+    fy: 439.0
+    distcoef1: -0.0953
+    distcoef2: 0.0874
+
+CameraParams_2_small:
+    rows: 480
+    cols: 640
+    fps: 400
+    cx: 313
+    cy: 242.5
+    fx: 883.5
+    fy: 880.6
+    distcoef1: -0.1
+    distcoef2: 0.0463
+
 
 MarkerParams:
     contours_lengtch1_min:  10    #LED contour size
@@ -41,3 +75,4 @@ is_record: False
 ifshow: True
 if_calc_depth: False
 if_analyze_motion: True
+cam_idx: 1

@@ -1,7 +1,8 @@
 1. analize swag and rotation
 2. measure tanslation between cam and rotor
-3. calibrate each cam
+
 4. tune angle pid
+
 struct CamParams
 {
     int rows, cols;

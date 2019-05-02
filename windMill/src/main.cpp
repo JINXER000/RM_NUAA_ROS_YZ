@@ -10,11 +10,12 @@
 #include "ros_dynamic_test/dyn_cfg.h"
 #include "std_msgs/String.h"
 #include "std_msgs/Float32.h"
+#include <std_msgs/Bool.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <tf/tf.h>
 using namespace std;
 using namespace cv;
-Mat img_src,bgrImg;
+Mat img_src;
 int X_bias, Y_bias, pix_x, pix_y;
 int is_find_enemy=0;
 bool isSuccess = 0;
@@ -22,7 +23,8 @@ float angX = 0, angY = 0, Z = 0;
 int led_type = 0,  frameCnt = 0, capIdx = 1;
 MarkSensor *markSensor=NULL;
 serial_common::Guard tgt_pos;
-bool is_windMill_mode=0;
+bool is_windMill_mode=false;
+bool got_img=false;
 
 int frame_process(Mat &bgrImg)
 {
@@ -73,8 +75,12 @@ class ImageConverter
   ros::Subscriber WM_activator_sub;
 
   ros::Publisher fps_pub;
+  ros::Publisher is_large_pub;
+  std_msgs::Bool is_large_msg;
+
   std_msgs::Float32 fps_msg;
   bool is_red,ifshow=1;
+  int cam_idx=1;
   clock_t begin_counter=clock();
 
 public:
@@ -85,9 +91,9 @@ public:
 
 
     nh_.getParam("/ifshow",ifshow);
-
+    nh_.getParam("/cam_idx",cam_idx);
     AlgoriParam ap;
-    CamParams cp;
+    CamParams cp(cam_idx,!is_windMill_mode);
     MarkerParams mp(ifshow);
     markSensor=new MarkSensor(ap,cp,mp);
     // Subscrive to input video feed and publish output video feed
@@ -102,6 +108,10 @@ public:
     show_image_pub_ = it_.advertise("/armor_detector/output_img", 1);
     serial_pub=nh_.advertise<serial_common::Guard>("write",20);
     fps_pub=nh_.advertise<std_msgs::Float32>("/fps",1);
+    is_large_pub=nh_.advertise<std_msgs::Bool>("/mv_param/is_large",3);
+    //200hz timer
+    //    ros::Timer visionTimer = nh_.createTimer(ros::Duration(0.1),&ImageConverter::timely_update,this);
+    //    visionTimer.start();
   }
 
   ~ImageConverter()
@@ -115,6 +125,8 @@ public:
     if(msg->data[0]==mode_normal)
     {
       is_windMill_mode=0;
+
+
     }
     else if(msg->data[0]==mode_windMill)
     {
@@ -122,6 +134,13 @@ public:
       is_windMill_mode=1;
 
     }
+    //modify camera params here
+
+    markSensor->cp=CamParams(cam_idx,!is_windMill_mode);
+
+    //get translation
+
+
   }
   void cfg_cb(const ros_dynamic_test::dyn_cfgConstPtr &msg)
   {
@@ -135,9 +154,63 @@ public:
                                  msg->ch3_max_b);
     //    MarkerParams::ifShow=msg->is_show_img;
   }
+
+  //  void timely_update(const ros::TimerEvent&)
+  //  {
+  //    if(!got_img)
+  //    {
+  //      return;
+  //    }
+  //    got_img=false;
+  //    //print fps
+  //    float FPS=(float)CLOCKS_PER_SEC/float( clock () - begin_counter );
+  //    std::cout <<" -----------node fps: "<< FPS<<std::endl;
+  //    fps_msg.data=FPS;
+  //    fps_pub.publish(fps_msg);
+  //    begin_counter = clock();
+
+  //    if(is_windMill_mode)   // strike wind mill
+  //    {
+  //      img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
+  //    }else   //normal
+  //    {
+
+  //      frame_process(img_src);
+
+  //    }
+
+  //    // Update GUI Window
+  //        if(ifshow)
+  //        {
+  //            cv::imshow("detection result", markSensor->img_show);
+  //            //    if(!markSensor.img_out.empty())
+  //            //      cv::imshow("feed to number", markSensor.img_out);
+  //            char key=cv::waitKey(1);
+  //            if(key=='q' ||key=='Q')
+  //            {
+  //                //send SIGINT
+  //                system("pkill roslaunch");
+  //            }
+
+  //        }
+
+  //    serial_pub.publish(tgt_pos);
+
+  //    std::cout <<" time of img callback: "<< float( clock () - begin_counter )/CLOCKS_PER_SEC<<std::endl;
+
+
+  //  }
+  void get_gimbal(tfScalar yaw,tfScalar pitch,tfScalar row)
+  {
+    tf::Quaternion quat(yaw,pitch,row);
+    markSensor->got_trans=1;
+    markSensor->trans.setRotation(quat);
+    markSensor->trans.setOrigin(tf::Vector3(0,0,0));
+
+  }
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {
-    //print fps
+    //    //print fps
     float FPS=(float)CLOCKS_PER_SEC/float( clock () - begin_counter );
     std::cout <<" -----------node fps: "<< FPS<<std::endl;
     fps_msg.data=FPS;
@@ -148,53 +221,60 @@ public:
     try
     {
       img_src = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8)->image.clone();
+      got_img=true;
     }
     catch (cv_bridge::Exception& e)
     {
       ROS_ERROR("cv_bridge exception: %s", e.what());
       return;
     }
+
     if(is_windMill_mode)   // strike wind mill
     {
       img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
     }else   //normal
     {
-
       frame_process(img_src);
 
     }
+    is_large_msg.data=!is_windMill_mode;  //if wm mode, then small resolution
+    is_large_pub.publish(is_large_msg);  //resolution of next frame will be ok...
+    serial_pub.publish(tgt_pos);
 
     // Update GUI Window
-        if(ifshow)
-        {
-            cv::imshow("detection result", markSensor->img_show);
-            //    if(!markSensor.img_out.empty())
-            //      cv::imshow("feed to number", markSensor.img_out);
-            char key=cv::waitKey(1);
-            if(key=='q' ||key=='Q')
-            {
-                //send SIGINT
-                system("pkill roslaunch");
-            }
+    if(ifshow)
+    {
+      cv::imshow("detection result", markSensor->img_show);
+      if(!markSensor->ROI_bgr.empty())
+        cv::imshow("track window", markSensor->ROI_bgr);
+      //    if(!markSensor.img_out.empty())
+      //      cv::imshow("feed to number", markSensor.img_out);
+      char key=cv::waitKey(1);
+      if(key=='q' ||key=='Q')
+      {
+        //send SIGINT
+        system("pkill roslaunch");
+      }
 
-        }
+    }
 
-    serial_pub.publish(tgt_pos);
+
+
     // Output modified video stream
 
     if(ifshow)
     {
-//      sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_show).toImageMsg();
-//      show_img_msg->header.stamp=ros::Time::now();
-//      show_image_pub_.publish(show_img_msg);
+      //      sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_show).toImageMsg();
+      //      show_img_msg->header.stamp=ros::Time::now();
+      //      show_image_pub_.publish(show_img_msg);
 
-//      sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->led_mask).toImageMsg();
-//      binary_img_msg->header.stamp=ros::Time::now();
-//      binary_image_pub_.publish(binary_img_msg);
+      //      sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->led_mask).toImageMsg();
+      //      binary_img_msg->header.stamp=ros::Time::now();
+      //      binary_image_pub_.publish(binary_img_msg);
 
-//      sensor_msgs::ImagePtr roi_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->ROI_show).toImageMsg();
-//      roi_img_msg->header.stamp = ros::Time::now();
-//      roi_image_pub_.publish(roi_img_msg);
+      //      sensor_msgs::ImagePtr roi_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->ROI_show).toImageMsg();
+      //      roi_img_msg->header.stamp = ros::Time::now();
+      //      roi_image_pub_.publish(roi_img_msg);
     }
     std::cout <<" time of img callback: "<< float( clock () - begin_counter )/CLOCKS_PER_SEC<<std::endl;
 

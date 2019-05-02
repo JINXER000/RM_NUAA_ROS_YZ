@@ -15,15 +15,19 @@ using namespace std;
 #include "opencv2/opencv.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <std_msgs/Bool.h>
 
 using namespace std;
 using namespace cv;
-Size dist_size = Size(640, 480);
+Size large_size = Size(640, 512);
+Size small_size = Size(640, 480);
+Size dist_size=large_size;
 string video_source,dbg_img_path;
 int frame_cnt=0;
 Mat img_show;
 int false_idx=0;
 int is_video_dbg=0;
+
 string num2str(double i)
 
 {
@@ -56,6 +60,16 @@ void imageCb(const sensor_msgs::ImageConstPtr& msg)
 
 
 }
+void get_is_large(const std_msgs::BoolConstPtr &is_large_resolution)
+{
+  if(is_large_resolution->data==true)
+  {
+      dist_size=large_size;
+  }else
+  {
+      dist_size=small_size;
+  }
+}
 
 int main(int argc, char **argv)
 {
@@ -64,6 +78,7 @@ int main(int argc, char **argv)
   image_transport::ImageTransport it(nh);//发布图片需要用到image_transport
   image_transport::Publisher pub = it.advertise("/camera/image_raw", 1);
 //  image_transport::Subscriber image_sub_=it.subscribe("/armor_detector/output_img", 1,imageCb);
+  ros::Subscriber is_large_sub=nh.subscribe("/mv_param/is_large",1,get_is_large);
 
   nh.getParam("/video_source",video_source);
   nh.getParam("/dbg_img_path",dbg_img_path);
@@ -107,8 +122,10 @@ int main(int argc, char **argv)
       }
     }
       //将opencv的图片转换成ros的sensor_msgs，然后才能发布。
-    if(Size(frame.cols,frame.rows)!=dist_size)
+    Size src_size(frame.cols,frame.rows);
+    if(src_size!=dist_size)   // resize to 640x512
        resize(frame, frame, dist_size);
+
       sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
 
       pub.publish(msg);

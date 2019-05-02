@@ -2,18 +2,68 @@
 #include "MarkerParams.h"
 
 
-  CamParams::CamParams()
+  CamParams::CamParams(int cam_idx,bool is_large)
   {
-    nh_.getParam("/CameraParams/rows",rows);
-    nh_.getParam("/CameraParams/cols",cols);
-    nh_.getParam("/CameraParams/fps",fps);
 
-    nh_.getParam("/CameraParams/cx",cx);
-    nh_.getParam("/CameraParams/cy",cy);
-    nh_.getParam("/CameraParams/fx",fx);
-    nh_.getParam("/CameraParams/fy",fy);
-    nh_.getParam("/CameraParams/distcoef1",distcoef1);
-    nh_.getParam("/CameraParams/distcoef2",distcoef2);
+    if(is_large)
+    {
+      if(cam_idx==1)
+      {
+        nh_.getParam("/CameraParams_1_big/rows",rows);
+        nh_.getParam("/CameraParams_1_big/cols",cols);
+        nh_.getParam("/CameraParams_1_big/fps",fps);
+
+        nh_.getParam("/CameraParams_1_big/cx",cx);
+        nh_.getParam("/CameraParams_1_big/cy",cy);
+        nh_.getParam("/CameraParams_1_big/fx",fx);
+        nh_.getParam("/CameraParams_1_big/fy",fy);
+        nh_.getParam("/CameraParams_1_big/distcoef1",distcoef1);
+        nh_.getParam("/CameraParams_1_big/distcoef2",distcoef2);
+
+      }else if(cam_idx==2)
+      {
+        nh_.getParam("/CameraParams_2_big/rows",rows);
+        nh_.getParam("/CameraParams_2_big/cols",cols);
+        nh_.getParam("/CameraParams_2_big/fps",fps);
+
+        nh_.getParam("/CameraParams_2_big/cx",cx);
+        nh_.getParam("/CameraParams_2_big/cy",cy);
+        nh_.getParam("/CameraParams_2_big/fx",fx);
+        nh_.getParam("/CameraParams_2_big/fy",fy);
+        nh_.getParam("/CameraParams_2_big/distcoef1",distcoef1);
+        nh_.getParam("/CameraParams_2_big/distcoef2",distcoef2);
+
+      }
+    }else
+    {
+      if(cam_idx==1)
+      {
+        nh_.getParam("/CameraParams_1_small/rows",rows);
+        nh_.getParam("/CameraParams_1_small/cols",cols);
+        nh_.getParam("/CameraParams_1_small/fps",fps);
+
+        nh_.getParam("/CameraParams_1_small/cx",cx);
+        nh_.getParam("/CameraParams_1_small/cy",cy);
+        nh_.getParam("/CameraParams_1_small/fx",fx);
+        nh_.getParam("/CameraParams_1_small/fy",fy);
+        nh_.getParam("/CameraParams_1_small/distcoef1",distcoef1);
+        nh_.getParam("/CameraParams_1_small/distcoef2",distcoef2);
+
+      }else if(cam_idx==2)
+      {
+        nh_.getParam("/CameraParams_2_small/rows",rows);
+        nh_.getParam("/CameraParams_2_small/cols",cols);
+        nh_.getParam("/CameraParams_2_small/fps",fps);
+
+        nh_.getParam("/CameraParams_2_small/cx",cx);
+        nh_.getParam("/CameraParams_2_small/cy",cy);
+        nh_.getParam("/CameraParams_2_small/fx",fx);
+        nh_.getParam("/CameraParams_2_small/fy",fy);
+        nh_.getParam("/CameraParams_2_small/distcoef1",distcoef1);
+        nh_.getParam("/CameraParams_2_small/distcoef2",distcoef2);
+
+      }
+    }
 
   }
 

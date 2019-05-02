@@ -48,7 +48,7 @@ class CamParams
         fx(fx_),fy(fy_),
         fps(fps_),distcoef1(distcoef1_),distcoef2(distcoef2_)
     {}
-    CamParams();
+    CamParams(int cam_idx,bool is_large);
 };
 class MarkerParams {
 public:

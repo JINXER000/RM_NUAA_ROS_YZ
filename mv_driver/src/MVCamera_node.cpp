@@ -14,22 +14,23 @@ using namespace std;
 #include "video_saver.h"
 using namespace std;
 using namespace cv;
-Size dist_size=Size(640,480);
+Size dist_size=Size(640,512);
 class MVCamNode
 {
 public:
   ros::NodeHandle node_;
-    int false_idx=0;
+  int false_idx=0;
   // shared image message
-     Mat rawImg;
+  Mat rawImg;
   sensor_msgs::ImagePtr msg;
   image_transport::Publisher image_pub_;
   ros::Subscriber cfg_exp_sub;
   ros::Subscriber is_large_sub;
-    ros::Subscriber is_rcd_sub;
+  ros::Subscriber is_rcd_sub;
   int image_width_, image_height_, framerate_, exposure_=4000, brightness_, contrast_, saturation_, sharpness_, focus_,
-      white_balance_, gain_;
+  white_balance_, gain_;
   bool large_resolution_=true,is_record_=false,autofocus_, autoexposure_=false, auto_white_balance_;
+  string rcd_path_;
   VideoSaver saver;
   clock_t begin_time;
   MVCamNode():
@@ -47,10 +48,20 @@ public:
     MVCamera::SetExposureTime(autoexposure_, exposure_);
     MVCamera::SetLargeResolution(large_resolution_);
     node_.param("image_width", image_width_, 640);
-    node_.param("image_height", image_height_, 480);
-    node_.param("framerate", framerate_, 200);
+    if(large_resolution_)
+    {
+      node_.param("image_height", image_height_, 512);
+      node_.param("framerate", framerate_, 200);
+    }
+    else
+    {
+      node_.param("image_height", image_height_, 480);
+      node_.param("framerate", framerate_, 400);
+
+    }
     node_.getParam("/is_record", is_record_);
-     begin_time= clock();
+    node_.getParam("/rcd_path", rcd_path_);
+    begin_time= clock();
   }
   ~MVCamNode()
   {
@@ -93,22 +104,23 @@ public:
   bool take_and_send_image()
   {
     // grab the image
-     MVCamera::GetFrame(rawImg,1);
-     if(rawImg.empty())
-     {
-       ROS_WARN("NO IMG GOT FROM MV");
-       return false;
-     }
- std::cout<<"take image timefly"<<float( clock () - begin_time )/CLOCKS_PER_SEC<<std::endl;
- begin_time= clock();
-     if(is_record_)
-     {
-       saver.write(rawImg);
-     }
-    if(Size(rawImg.cols,rawImg.rows)!=dist_size)
+    MVCamera::GetFrame(rawImg,1);
+    if(rawImg.empty())
+    {
+      ROS_WARN("NO IMG GOT FROM MV");
+      return false;
+    }
+    std::cout<<"take image timefly"<<float( clock () - begin_time )/CLOCKS_PER_SEC<<std::endl;
+    begin_time= clock();
+    if(is_record_)
+    {
+      saver.write(rawImg,rcd_path_);
+    }
+    if(large_resolution_)
       resize(rawImg,rawImg,dist_size);
-//    imshow("raw img from MV cam",rawImg);
-//    waitKey(1);
+
+    //    imshow("raw img from MV cam",rawImg);
+    //    waitKey(1);
     msg= cv_bridge::CvImage(std_msgs::Header(), "bgr8", rawImg).toImageMsg();
     // publish the image
     image_pub_.publish(msg);

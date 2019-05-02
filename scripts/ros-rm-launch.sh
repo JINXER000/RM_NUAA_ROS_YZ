@@ -1,5 +1,5 @@
 #! /bin/bash 
-cd /home/yzchen/CODE/RM/ros_ws/
+cd ../../../
 usb_ttl_device=$(ls /dev/ttyUSB*)
 echo "usb device is ${usb_ttl_device}"
 echo "nvidia"|sudo chmod 777 ${usb_ttl_device}

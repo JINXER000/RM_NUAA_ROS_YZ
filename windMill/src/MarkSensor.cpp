@@ -1,7 +1,7 @@
 #include "MarkerSensor.h"
 
 //#include "utils.h"
-Mat MarkSensor::img_show, MarkSensor::ROI_show;
+Mat MarkSensor::img_show, MarkSensor::ROI_bgr;
 using namespace cv;
 using namespace std;
 
@@ -374,8 +374,8 @@ int MarkSensor::DetectLEDMarker(const Mat &img, Marker &res_marker)
   std::cout <<" TO BINARY : "<< float( clock () - begin_time[4] )/CLOCKS_PER_SEC<<std::endl;
 
   //Mat led_erode;
-  //  Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
-  //  morphologyEx(led_mask, led_mask, MORPH_CLOSE, element, Point(-1, -1), 1);
+    Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
+    morphologyEx(led_mask, led_mask, MORPH_CLOSE, element, Point(-1, -1), 1);
 
   bool is_detected=GetLEDMarker(led_mask,res_marker);
   if(!is_detected)
@@ -401,7 +401,7 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   bot = bot >= cp.rows ? cp.rows : bot;
   Rect ROI(left, top, (right - left), (bot - top));
   /// Get Mask
-  cv::Mat ROI_bgr = img(ROI).clone();
+  ROI_bgr = img(ROI).clone();
 
   cv::Mat ROI_led_mask;
   ///check if empty
@@ -423,10 +423,7 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
 //    dbg_save(ROI_bgr,ap.dbg_path,status);
     return -1;
   }
-  ROI_show = ROI_led_mask.clone();
-    if (mp.ifShow) {
-      cv::imshow("track window", ROI_bgr);
-    }
+
   res_marker.LEDs[0].center.x += ROI.x;
   res_marker.LEDs[0].center.y += ROI.y;
   res_marker.LEDs[1].center.x += ROI.x;
@@ -452,7 +449,7 @@ int MarkSensor::judge_motion()
   deque<int> direction_list;
 
   int direction_flag;   //left:-1, right::1
-  int step=2;
+  int step=1;
   for(int i=0;i<leaky_list.size();i+=step)
   {
 
@@ -615,7 +612,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
     else {
       printf("Track 0 No target!\n");
       track_fail_cnt[2]++;
-      if(track_fail_cnt[2]>10)
+      if(track_fail_cnt[2]>20)
       {
         status=STATUS_DETECTING;
         printf("failed to find marker in ROI");
@@ -637,12 +634,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   ///update 3d position
 
 
-  int depth;
-  if(mp.if_calc_depth)
-  {
-    begin_time[5]=clock();
-    depth=calcDepth(marker);
-  }
+
 
   float tanX=(target.x - cp.cx) / cp.fx;
   float tanY=(target.y - cp.cy) / cp.fy;
@@ -650,19 +642,35 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   angY=atan(tanX)*RAD2DEG;
   if(mp.if_calc_depth)
   {
-    Z = depth;
-    float X = tanX*Z;
-    float Y = tanY*Z;
-    printf("Get target: %f %f %f type: %d\n", X, Y, Z, type);
+    begin_time[5]=clock();
+    int depth=calcDepth(marker);
+//    Z = depth;
+//    float X = tanX*Z;
+//    float Y = tanY*Z;
+//    printf("Get target: %f %f %f type: %d\n", X, Y, Z, type);
+
+    if(got_trans)
+    {
+      //camera frame
+//      tf::Vector3 pos_t2c;
+      pos_t2c.m_floats[0]=depth;
+      pos_t2c.m_floats[1]=-tanX*depth;
+      pos_t2c.m_floats[2]=-tanY*depth;
+      //world frame (N-W-U)
+
+//      tf::Vector3 pos_t2w;
+      pos_t2w=trans*pos_t2c;
+    }
     std::cout <<" calculate depth : "<< float( clock () - begin_time[5] )/CLOCKS_PER_SEC<<std::endl;
 
   }
-  /// analyze motion
+  /// analyze motion---do not use for now
   if(mp.if_analyze_motion)
   {
     if(status!=STATUS_DETECTING)
     {
-      float leaky_ratio=marker.LEDs[0].width/marker.LEDs[1].width;
+//      float leaky_ratio=marker.LEDs[0].width/marker.LEDs[1].width;
+      float leaky_ratio=(marker.LEDs[0].center.y-marker.LEDs[1].center.y)/(marker.LEDs[0].center.x-marker.LEDs[1].center.x);
       leaky_list.push_back(leaky_ratio);
       if(leaky_list.size()>100)
       {

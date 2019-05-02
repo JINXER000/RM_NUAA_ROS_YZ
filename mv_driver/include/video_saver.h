@@ -61,7 +61,7 @@ string GetCurrentTime2()
 class VideoSaver{
     public:
         VideoSaver(int num = 1500);
-        void write(Mat frame);
+        void write(Mat &frame,string &rcd_path);
     private:
         int frameCount;
         int maxFrame;
@@ -74,11 +74,11 @@ VideoSaver::VideoSaver(int num)
     maxFrame = num;
 }
 
-void VideoSaver::write(Mat frame)
+void VideoSaver::write(Mat &frame,string &rcd_path)
 {
     if( frameCount % maxFrame == 0 )
     {
-        string fileName = "/home/yzchen/CODE/RM/video/Video_" + GetCurrentTime() + ".avi";
+        string fileName = rcd_path+"Video_" + GetCurrentTime() + ".avi";
         writer.open(fileName, CV_FOURCC('M', 'J', 'P', 'G'), 25.0, frame.size());
     }
     frameCount++;
