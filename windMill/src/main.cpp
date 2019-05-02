@@ -13,6 +13,8 @@
 #include <std_msgs/Bool.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <tf/tf.h>
+#include "dafu.h"
+
 using namespace std;
 using namespace cv;
 Mat img_src;
@@ -20,7 +22,7 @@ int X_bias, Y_bias, pix_x, pix_y;
 int is_find_enemy=0;
 bool isSuccess = 0;
 float angX = 0, angY = 0, Z = 0;
-int led_type = 0,  frameCnt = 0, capIdx = 1;
+int led_type = 0,  capIdx = 1;
 MarkSensor *markSensor=NULL;
 serial_common::Guard tgt_pos;
 bool is_windMill_mode=false;
@@ -40,20 +42,20 @@ int frame_process(Mat &bgrImg)
     tgt_pos.xlocation=pix_x;
     tgt_pos.ylocation=pix_y;
     tgt_pos.depth=Z;
-    tgt_pos.angX=angX;
-    tgt_pos.angY=angY;
+    tgt_pos.angX=angX*100;
+    tgt_pos.angY=angY*100;
 
     std::cout<<"target pix::  "<<pix_x<<","<<pix_y<<std::endl;
   }else
   {
     is_find_enemy=0;
-    X_bias = 850;
-    Y_bias = 850;
-    tgt_pos.xlocation=850;
-    tgt_pos.ylocation=850;
-    tgt_pos.depth=850;
-    tgt_pos.angX=850;
-    tgt_pos.angY=850;
+    X_bias = 33000;
+    Y_bias = 33000;
+    tgt_pos.xlocation=33000;
+    tgt_pos.ylocation=33000;
+    tgt_pos.depth=33000;
+    tgt_pos.angX=33000;
+    tgt_pos.angY=33000;
 
   }
 
@@ -231,7 +233,10 @@ public:
 
     if(is_windMill_mode)   // strike wind mill
     {
-      img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
+//      img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
+      dafu_process(img_src,pix_x,pix_y);
+      tgt_pos.xlocation=pix_x;
+      tgt_pos.ylocation=pix_y;
     }else   //normal
     {
       frame_process(img_src);

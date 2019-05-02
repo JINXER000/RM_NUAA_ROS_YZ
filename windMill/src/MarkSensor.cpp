@@ -647,7 +647,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
 //    Z = depth;
 //    float X = tanX*Z;
 //    float Y = tanY*Z;
-//    printf("Get target: %f %f %f type: %d\n", X, Y, Z, type);
+    printf("=======Get target: %f %f %f========\n", angX, angY, depth);
 
     if(got_trans)
     {

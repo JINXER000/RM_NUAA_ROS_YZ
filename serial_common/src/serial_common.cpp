@@ -11,7 +11,9 @@
 #include <serial/serial.h>  //ROS已经内置了的串口包
 #include <std_msgs/String.h>
 #include "Serial_common_config.h"
+#include "iomanip"
 #include <stdlib.h>
+#include <serial_common/gimbal.h>
 #ifdef INFRANTRY_MODE
 #include <serial_common/Infantry.h>
 #endif
@@ -20,7 +22,7 @@
 #endif
 #define DATA_LEN 14
 serial::Serial ser; //声明串口对象
-
+serial_common::gimbal receive_msg;
 
 unsigned char Add_CRC(unsigned char InputBytes[], unsigned char data_lenth) {
     unsigned char byte_crc = 0;
@@ -62,18 +64,26 @@ void write_callback(const serial_common::Guard::ConstPtr& msg)
     Buffer[0] = 0xFF;
     Buffer[1]=DATA_LEN;
     Buffer[2]=0x02;
-    Data_disintegrate((unsigned int)msg->xlocation, &Buffer[3], &Buffer[4]);
-    Data_disintegrate((unsigned int)msg->ylocation, &Buffer[5], &Buffer[6]);
-    Data_disintegrate((unsigned int)msg->depth, &Buffer[7], &Buffer[8]);
-    Data_disintegrate((unsigned int)msg->angX, &Buffer[9], &Buffer[10]);
-    Data_disintegrate((unsigned int)msg->angY, &Buffer[11], &Buffer[12]);
+    Data_disintegrate(msg->xlocation, &Buffer[3], &Buffer[4]);
+    Data_disintegrate(msg->ylocation, &Buffer[5], &Buffer[6]);
+    Data_disintegrate(msg->depth, &Buffer[7], &Buffer[8]);
+    Data_disintegrate(msg->angX, &Buffer[9], &Buffer[10]);
+    Data_disintegrate(msg->angY, &Buffer[11], &Buffer[12]);
     Buffer[DATA_LEN - 1] = Add_CRC(Buffer, DATA_LEN - 1);
 
     ser.write(Buffer,DATA_LEN);   //发送串口数据
     printf("got location:: (%d,  %d )\n",msg->xlocation,msg->ylocation);
 }
 #endif
+void receive_process(std::string &read_buffer)
+{
+  if(read_buffer[0]!=0XFF)
+  {
+    return;
+  }
+  int patch_num=(int)read_buffer[1];
 
+}
 int main (int argc, char** argv)
 {
     //初始化节点
@@ -135,6 +145,8 @@ int main (int argc, char** argv)
         if(ser.available()){
             std_msgs::String result;
             result.data = ser.read(ser.available());
+            std::string read_buffer=result.data.c_str();
+
             read_pub.publish(result);
         }
 

@@ -55,6 +55,7 @@ add_message_files(
    FILES
    Infantry.msg
    Guard.msg
+   gimbal.msg
 #   Message1.msg
 #   Message2.msg
 )
