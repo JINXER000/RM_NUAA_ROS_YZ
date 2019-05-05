@@ -5,8 +5,6 @@
   > Created Time: Sun 24 Feb 2019 05:08:34 PM
  ************************************************************************/
 
-#include<iostream>
-using namespace std;
 
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>

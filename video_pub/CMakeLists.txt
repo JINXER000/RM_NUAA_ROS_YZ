@@ -15,7 +15,10 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 find_package( OpenCV REQUIRED )
-
+FIND_PACKAGE(CUDA REQUIRED)
+#SET(CUDA_NVCC_FLAGS "-arch=sm_61;-O3;-use_fast_math" CACHE STRING "nvcc flags" FORCE)
+SET(CUDA_NVCC_FLAGS "-g ;-G ;-arch=sm_60" CACHE STRING "nvcc flags" FORCE)
+SET (CUDA_VERBOSE_BUILD ON CACHE BOOL "nvcc verbose" FORCE)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES windMill
@@ -25,12 +28,14 @@ catkin_package(
 
 
 include_directories(
-# include
+ include/
   ${catkin_INCLUDE_DIRS}
 )
 
- add_executable(${PROJECT_NAME}_node
+ cuda_add_executable(${PROJECT_NAME}_node
      src/video_pub.cpp
+     src/preprocess_kernel.cu
+     src/preprocess.cpp
      )
 
  target_link_libraries(${PROJECT_NAME}_node

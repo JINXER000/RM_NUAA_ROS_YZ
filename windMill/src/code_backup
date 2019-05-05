@@ -2,6 +2,10 @@
 2. measure tanslation between cam and rotor
 
 4. tune angle pid
+5. accelrate using cuda:
+    resize;
+    split channel;
+    mopho;
 
 struct CamParams
 {
