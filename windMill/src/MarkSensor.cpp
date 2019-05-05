@@ -5,7 +5,7 @@ Mat MarkSensor::img_show, MarkSensor::ROI_bgr;
 using namespace cv;
 using namespace std;
 
-clock_t begin_time[10];
+int begin_time[10];
 int Marker::ComputeKeyPoints()
 {
   int is_dir0_down=(LEDs[0].dir.dot(Point2f(0,1)))>0?1:-1;
@@ -234,7 +234,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
   vector<vector<Point>> tmp_countours;
   vector<vector<Point>*> pContours;
   // 3 rad
-  begin_time[0] = clock();
+  begin_time[0] = cv::getTickCount();
   findContours(roi_mask, tmp_countours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
   for (auto &contour : tmp_countours)
   {
@@ -244,10 +244,10 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 
 
   }
-  std::cout <<" find countour: "<< float( clock () - begin_time[0] )/CLOCKS_PER_SEC<<"in size "<<tmp_countours.size()<<std::endl;
+  std::cout <<" find countour: "<< float( cv::getTickCount() - begin_time[0] )/cv::getTickFrequency()<<"in size "<<tmp_countours.size()<<std::endl;
 
   //PCA
-  begin_time[1]=clock();
+  begin_time[1]=cv::getTickCount();
   vector <RotRect > LEDs;
   for (auto & pContour : pContours)
   {
@@ -269,7 +269,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
     printf("LED num < 2 ! \n");
     return -1;
   }
-  std::cout <<" PCA: "<< float( clock () - begin_time[1] )/CLOCKS_PER_SEC<<"in size "<<pContours.size()<<std::endl;
+  std::cout <<" PCA: "<< float(cv::getTickCount() - begin_time[1] )/cv::getTickFrequency()<<"in size "<<pContours.size()<<std::endl;
 
   /// search marker
   begin_time[2]=clock();
@@ -345,20 +345,20 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 
   }
 
-  std::cout <<" match led : "<< float( clock () - begin_time[2] )/CLOCKS_PER_SEC<<"in size "<<LED_sz<<std::endl;
+  std::cout <<" match led : "<< float( cv::getTickCount() - begin_time[2] )/cv::getTickFrequency()<<"in size "<<LED_sz<<std::endl;
 
   if (markers.empty())
   {
     return -1;
   }
   // decide which marker to shoot
-  begin_time[3]=clock();
+  begin_time[3]=cv::getTickCount();
   int res_idx = tgt_selector(markers);
   res_marker = markers[res_idx];
   res_marker.old_depth=0;
   res_marker.depth=0;
 
-  std::cout <<"decide target : "<< float( clock () - begin_time[3] )/CLOCKS_PER_SEC<<"ms in size "<<markers.size()<<std::endl;
+  std::cout <<"decide target : "<< float( cv::getTickCount() - begin_time[3] )/cv::getTickFrequency()<<"ms in size "<<markers.size()<<std::endl;
 
   return 0;
 }
@@ -369,9 +369,9 @@ int MarkSensor::DetectLEDMarker(const Mat &img, Marker &res_marker)
   //cvtColor(img_bgr, img_hsv, CV_BGR2HSV);
   img.copyTo(img_hsv);
   /*actually we use bgr*/
-  begin_time[4]=clock();
+  begin_time[4]=cv::getTickCount();
   cv::inRange(img_hsv,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),led_mask);
-  std::cout <<" TO BINARY : "<< float( clock () - begin_time[4] )/CLOCKS_PER_SEC<<std::endl;
+  std::cout <<" TO BINARY : "<< float( cv::getTickCount() - begin_time[4] )/cv::getTickFrequency()<<std::endl;
 
   //Mat led_erode;
     Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
@@ -412,10 +412,10 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
     marker=Marker();
     return -1;
   }
-  begin_time[4]=clock();
+  begin_time[4]=cv::getTickCount();
 
   cv::inRange(ROI_bgr,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),ROI_led_mask);
-  std::cout <<" ROI TO BINARY : "<< float( clock () - begin_time[4] )/CLOCKS_PER_SEC<<std::endl;
+  std::cout <<" ROI TO BINARY : "<< float( cv::getTickCount() - begin_time[4] )/cv::getTickFrequency()<<std::endl;
 
   /// Get Marker
   if (GetLEDMarker(ROI_led_mask, res_marker) != STATUS_SUCCESS) {
@@ -534,7 +534,7 @@ int MarkSensor::judge_motion()
 
 int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, float &Z, int &type,int &pix_x,int &pix_y)
 {
-  begin_time[6]=clock();
+  begin_time[6]=cv::getTickCount();
   img.copyTo(img_show);
 
   if (status == STATUS_DETECTING) {
@@ -642,7 +642,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   angY=atan(tanX)*RAD2DEG;
   if(mp.if_calc_depth)
   {
-    begin_time[5]=clock();
+    begin_time[5]=cv::getTickCount();
     int depth=calcDepth(marker);
 //    Z = depth;
 //    float X = tanX*Z;
@@ -661,7 +661,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
 //      tf::Vector3 pos_t2w;
       pos_t2w=trans*pos_t2c;
     }
-    std::cout <<" calculate depth : "<< float( clock () - begin_time[5] )/CLOCKS_PER_SEC<<std::endl;
+    std::cout <<" calculate depth : "<< float( cv::getTickCount() - begin_time[5] )/cv::getTickFrequency()<<std::endl;
 
   }
   /// analyze motion---do not use for now
@@ -686,7 +686,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
     }
 
   }
-  std::cout <<" process 1 frame : "<< float( clock () - begin_time[6] )/CLOCKS_PER_SEC<<std::endl;
+  std::cout <<" process 1 frame : "<< float( cv::getTickCount() - begin_time[6] )/cv::getTickFrequency()<<std::endl;
 
   return 0;
 }

@@ -83,7 +83,7 @@ int main(int argc, char **argv)
   nh.getParam("/video_source",video_source);
   nh.getParam("/dbg_img_path",dbg_img_path);
   nh.getParam("/is_video_dbg",is_video_dbg);
-  ros::Rate loop_rate(30);
+  ros::Rate loop_rate(200);
   //  string path = "/home/yzchen/catkin_ws/videos/windMill.mp4";
 
 
@@ -108,19 +108,19 @@ int main(int argc, char **argv)
     }
     //debug 1 image
 //    frame=imread(dbg_img_path+"0falsesrc3.jpg");
-    if(is_video_dbg)
-    {
-      imshow("raw img",frame);
-      char key=waitKey(1);
-      if (key == 's') {
-        false_idx++;
-          string saveName_src =
-              dbg_img_path + num2str(false_idx) + "falsesrc.jpg";
+//    if(is_video_dbg)
+//    {
+//      imshow("raw img",frame);
+//      char key=waitKey(1);
+//      if (key == 's') {
+//        false_idx++;
+//          string saveName_src =
+//              dbg_img_path + num2str(false_idx) + "falsesrc.jpg";
 
-        std::cout<<saveName_src<<endl;
-        imwrite(saveName_src, frame);
-      }
-    }
+//        std::cout<<saveName_src<<endl;
+//        imwrite(saveName_src, frame);
+//      }
+//    }
       //将opencv的图片转换成ros的sensor_msgs，然后才能发布。
     Size src_size(frame.cols,frame.rows);
     if(src_size!=dist_size)   // resize to 640x512

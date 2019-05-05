@@ -144,6 +144,7 @@ include_directories(
      src/MarkSensor.cpp
      src/templetetracking.cpp
      src/dafu.cpp
+     src/windMill.cpp
      )
 
 ## Rename C++ executable without prefix
