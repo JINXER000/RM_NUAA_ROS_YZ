@@ -3,8 +3,8 @@ project(video_pub)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
  add_compile_options(-std=c++11)
-set(ROS_BUILD_TYPE Debug)
-set(CMAKE_BUILD_TYPE Debug)
+set(ROS_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Release)
 
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
@@ -16,8 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package( OpenCV REQUIRED )
 FIND_PACKAGE(CUDA REQUIRED)
-#SET(CUDA_NVCC_FLAGS "-arch=sm_61;-O3;-use_fast_math" CACHE STRING "nvcc flags" FORCE)
-SET(CUDA_NVCC_FLAGS "-g ;-G ;-arch=sm_60" CACHE STRING "nvcc flags" FORCE)
+SET(CUDA_NVCC_FLAGS "-arch=sm_61;-O3;-use_fast_math" CACHE STRING "nvcc flags" FORCE)
+#SET(CUDA_NVCC_FLAGS "-g ;-G ;-arch=sm_60" CACHE STRING "nvcc flags" FORCE)
 SET (CUDA_VERBOSE_BUILD ON CACHE BOOL "nvcc verbose" FORCE)
 catkin_package(
 #  INCLUDE_DIRS include
@@ -37,6 +37,9 @@ include_directories(
      src/preprocess_kernel.cu
      src/preprocess.cpp
      )
+# add_executable(${PROJECT_NAME}_node
+#     src/video_pub.cpp
+#     )
 
  target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
