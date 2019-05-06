@@ -3,8 +3,8 @@ project(video_pub)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
  add_compile_options(-std=c++11)
-set(ROS_BUILD_TYPE Release)
-set(CMAKE_BUILD_TYPE Release)
+set(ROS_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Debug)
 
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS

@@ -1,9 +1,9 @@
-#include "preprocess.h"
+#include "preprocess_kernel.cuh"
 
 __global__
-void cuda_resize(const uchar4* d_rawImg,
+void cuda_resize(const uchar3* d_rawImg,
                  int rows,int cols,
-                 uchar4* d_resizeImg)  //1024*1280 --> 512*640
+                 uchar3* d_resizeImg)  //1024*1280 --> 512*640
 {
     int2 idx_2d=make_int2((blockIdx.x*blockDim.x)+threadIdx.x,(blockIdx.y*blockDim.y)+threadIdx.y);
     int idx_1d=cols*idx_2d.y+idx_2d.x;
@@ -20,7 +20,7 @@ void cuda_resize(const uchar4* d_rawImg,
 }
 
 __global__
-void channelComp(const uchar4* input_rgba,
+void channelComp(const uchar3* input_BGR,
                       int rows,int cols, unsigned char threthold, bool is_tgt_red,
                       unsigned char* redChannel,
                       unsigned char* greenChannel,
@@ -33,10 +33,10 @@ void channelComp(const uchar4* input_rgba,
       int idx_1d=cols*idx_2d.y+idx_2d.x;
       if(idx_2d.x>=cols||idx_2d.y>=rows)
           return;
-      uchar4 rgba_pix=input_rgba[idx_1d];
-      redChannel[idx_1d]=rgba_pix.x;
-      greenChannel[idx_1d]=rgba_pix.y;
-      blueChannel[idx_1d]=rgba_pix.z;
+      uchar3 BGR_pix=input_BGR[idx_1d];
+      redChannel[idx_1d]=BGR_pix.z;
+      greenChannel[idx_1d]=BGR_pix.y;
+      blueChannel[idx_1d]=BGR_pix.x;
 
       //compare red and blue channel
       int comp_pix;
@@ -57,7 +57,7 @@ void channelComp(const uchar4* input_rgba,
 
 
 }
-void preKernelWrapper(uchar4* d_rawImg, uchar4* d_resizeImg,
+void preKernelWrapper(uchar3* d_rawImg, uchar3* d_resizeImg,
                       int rows,int cols, unsigned char threthold, bool is_tgt_red,
                       unsigned char* redChannel,
                       unsigned char* greenChannel,
