@@ -47,7 +47,7 @@ void cuda_proc::alloc_mem(int rows, int cols)
     h_greenChannel=(unsigned  char*)green_ch.ptr<unsigned char>(0);
     h_redChannel=(unsigned  char*)red_ch.ptr<unsigned char>(0);
 
-    printf("initalize done");
+    printf("GPU initalize done  \n");
 }
 void cuda_proc::reAlloc_mem(int newRows, int newCols)
 {
@@ -69,7 +69,7 @@ void cuda_proc::free_mem()
      CUDA_FREE_DEV_MEM(d_monoImg);
      CUDA_FREE_DEV_MEM(d_compImg);
 
-     printf("uninitialized!");
+     printf(" GPU uninitialized! \n");
 
 }
 void cuda_proc::mat2Dmem(cv::Mat &inputImg)
@@ -83,7 +83,7 @@ void cuda_proc::proc_update(cv::Mat &inputImg)
     if(inputImg.rows!=_rows||inputImg.cols!=_cols)
     {
         reAlloc_mem(inputImg.rows,inputImg.cols);
-        printf("GPU OVER FLOW!");
+        printf("GPU OVER FLOW! \n");
     }
 
     //update
@@ -93,7 +93,7 @@ void cuda_proc::proc_update(cv::Mat &inputImg)
                      d_monoImg,d_compImg);
     //output
 
-    CUDA_MEMCPY_D2H(h_resizeBGR,d_resizeBGR,resize_size);
+//    CUDA_MEMCPY_D2H(h_resizeBGR,d_resizeBGR,resize_size);
 //    CUDA_MEMCPY_D2H(h_monoImg,d_monoImg,mono_size);
     CUDA_MEMCPY_D2H(h_compImg,d_compImg,mono_size);
 //    CUDA_MEMCPY_D2H(h_redChannel,d_redChannel,mono_size);

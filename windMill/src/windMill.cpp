@@ -375,8 +375,8 @@ int windMill::test_video( Mat &srcImg, string &video_path)
 
     while (capture.read(srcImg))
     {
-        if (Size(srcImg.cols, srcImg.rows) != dist_size_1)
-            resize(srcImg, srcImg, dist_size_1);
+//        if (Size(srcImg.cols, srcImg.rows) != dist_size_1)
+//            resize(srcImg, srcImg, dist_size_1);
            int pix_x,pix_y;
         process_windmill_B(srcImg,pix_x,pix_y);
 

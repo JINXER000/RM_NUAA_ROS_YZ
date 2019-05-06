@@ -26,7 +26,7 @@ int led_type = 0,  capIdx = 1;
 MarkSensor *markSensor=NULL;
 windMill *wind_mill=NULL;
 serial_common::Guard tgt_pos;
-bool is_windMill_mode=true;
+bool is_windMill_mode=false;
 bool got_img=false;
 
 int frame_process(Mat &bgrImg)
@@ -114,8 +114,8 @@ public:
         fps_pub=nh_.advertise<std_msgs::Float32>("/fps",1);
         is_large_pub=nh_.advertise<std_msgs::Bool>("/mv_param/is_large",3);
         //200hz timer
-        //    ros::Timer visionTimer = nh_.createTimer(ros::Duration(0.1),&ImageConverter::timely_update,this);
-        //    visionTimer.start();
+           visionTimer = nh_.createTimer(ros::Duration(0.02),&ImageConverter::timely_update,this);
+            visionTimer.start();
     }
 
     ~ImageConverter()
@@ -159,51 +159,17 @@ public:
         //    MarkerParams::ifShow=msg->is_show_img;
     }
 
-    //  void timely_update(const ros::TimerEvent&)
-    //  {
-    //    if(!got_img)
-    //    {
-    //      return;
-    //    }
-    //    got_img=false;
-    //    //print fps
-    //    float FPS=(float)CLOCKS_PER_SEC/float( clock () - begin_counter );
-    //    std::cout <<" -----------node fps: "<< FPS<<std::endl;
-    //    fps_msg.data=FPS;
-    //    fps_pub.publish(fps_msg);
-    //    begin_counter = clock();
+      void timely_update(const ros::TimerEvent&)
+      {
+        if(!got_img)
+        {
+          return;
+        }
+        got_img=false;
+        //main work
 
-    //    if(is_windMill_mode)   // strike wind mill
-    //    {
-    //      img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
-    //    }else   //normal
-    //    {
-
-    //      frame_process(img_src);
-
-    //    }
-
-    //    // Update GUI Window
-    //        if(ifshow)
-    //        {
-    //            cv::imshow("detection result", markSensor->img_show);
-    //            //    if(!markSensor.img_out.empty())
-    //            //      cv::imshow("feed to number", markSensor.img_out);
-    //            char key=cv::waitKey(1);
-    //            if(key=='q' ||key=='Q')
-    //            {
-    //                //send SIGINT
-    //                system("pkill roslaunch");
-    //            }
-
-    //        }
-
-    //    serial_pub.publish(tgt_pos);
-
-    //    std::cout <<" time of img callback: "<< float( clock () - begin_counter )/CLOCKS_PER_SEC<<std::endl;
-
-
-    //  }
+        process_frame();
+      }
     void get_gimbal(tfScalar yaw,tfScalar pitch,tfScalar row)
     {
         tf::Quaternion quat(yaw,pitch,row);
@@ -215,10 +181,9 @@ public:
     void imageCb(const sensor_msgs::ImageConstPtr& msg)
     {
 
-            begin_counter = cv::getTickCount();
-            clock_t begin_time=clock();
-        //main work
-        timer cb_tim("image call back");
+
+//        //main work
+//        timer cb_tim("image call back");
         try
         {
             img_src = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8)->image.clone();
@@ -230,6 +195,22 @@ public:
             return;
         }
 
+        //process_frame();
+
+
+
+//        //    std::cout <<" time of img callback: "<< float( cv::getTickCount() - begin_counter )/cv::getTickFrequency()<<std::endl;
+//        float FPS=1/cb_tim.elapsed();
+//        fps_msg.data=FPS;
+//        fps_pub.publish(fps_msg);
+//            //print fps
+////        gtimer.Stop();
+////        std::cout<<"timer fly of 1 frame "<<gtimer.Elapsed()<<std::endl;
+////        gtimer.Start();
+
+    }
+    void process_frame()
+    {
         if(is_windMill_mode)   // strike wind mill
         {
             //      img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
@@ -264,37 +245,28 @@ public:
             }
 
         }
+                // Output modified video stream
 
+                if(ifshow)
+                {
+                    //      sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_show).toImageMsg();
+                    //      show_img_msg->header.stamp=ros::Time::now();
+                    //      show_image_pub_.publish(show_img_msg);
 
+                    //      sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->led_mask).toImageMsg();
+                    //      binary_img_msg->header.stamp=ros::Time::now();
+                    //      binary_image_pub_.publish(binary_img_msg);
 
-        // Output modified video stream
-
-        if(ifshow)
-        {
-            //      sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_show).toImageMsg();
-            //      show_img_msg->header.stamp=ros::Time::now();
-            //      show_image_pub_.publish(show_img_msg);
-
-            //      sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->led_mask).toImageMsg();
-            //      binary_img_msg->header.stamp=ros::Time::now();
-            //      binary_image_pub_.publish(binary_img_msg);
-
-            //      sensor_msgs::ImagePtr roi_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->ROI_show).toImageMsg();
-            //      roi_img_msg->header.stamp = ros::Time::now();
-            //      roi_image_pub_.publish(roi_img_msg);
-        }
-        //    std::cout <<" time of img callback: "<< float( cv::getTickCount() - begin_counter )/cv::getTickFrequency()<<std::endl;
-        float FPS=1/cb_tim.elapsed();
-        fps_msg.data=FPS;
-        fps_pub.publish(fps_msg);
-            //print fps
-//            float cbtime=float( cv::getTickCount() - begin_counter )/(float)cv::getTickFrequency();
-//            std::cout <<" -----------node cb time: "<< (float)cv::getTickFrequency()<<std::endl;
-//            float cbtime_2=float(clock() - begin_time )/(float)CLOCKS_PER_SEC;
-//            std::cout <<" -----------node cb time: "<< float( cv::getTickCount() - begin_counter )<<std::endl;
+                    //      sensor_msgs::ImagePtr roi_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->ROI_show).toImageMsg();
+                    //      roi_img_msg->header.stamp = ros::Time::now();
+                    //      roi_image_pub_.publish(roi_img_msg);
+                }
 
 
     }
+
+private:
+    ros::Timer visionTimer;
 };
 
 int main(int argc, char** argv)

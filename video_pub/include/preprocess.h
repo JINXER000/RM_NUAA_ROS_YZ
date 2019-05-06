@@ -9,7 +9,7 @@
 #include <iostream>
 #include "opencv2/opencv.hpp"
 #include <opencv2/highgui/highgui.hpp>
-
+#include "gpu_timer.h"
 static void hdlCudaErr(cudaError err, const char* const func, const char* const file, const int line)
 {
     if (err != cudaSuccess)
