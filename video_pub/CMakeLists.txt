@@ -32,10 +32,20 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
- cuda_add_executable(${PROJECT_NAME}_node
+# cuda_add_executable(${PROJECT_NAME}_node
+#     src/video_pub.cpp
+#     src/preprocess_kernel.cu
+#     src/preprocess.cpp
+#     )
+cuda_add_library(cudaLIb ${LIB_TYPE}
+    src/preprocess_kernel.cu
+    )
+ add_executable(${PROJECT_NAME}_node
      src/video_pub.cpp
-     src/preprocess_kernel.cu
      src/preprocess.cpp
+     )
+ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}
+     cudaLIb
      )
 # add_executable(${PROJECT_NAME}_node
 #     src/video_pub.cpp
@@ -44,5 +54,6 @@ include_directories(
  target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
    ${OpenCV_LIBRARIES}
+   cudaLIb
  )
 

@@ -16,36 +16,36 @@ void cuda_proc::alloc_mem(int rows, int cols)
     input_size=rows*cols*sizeof(uchar3);
     CUDA_ALLOC_DEV_MEM(&d_inputBGR,input_size);
 //output
-    if(rows==1024||cols==1280)
-    {
-        //need resize
-        rows=512;
-        cols=640;
-        resize_size=rows*cols*sizeof(uchar3);
-        CUDA_ALLOC_DEV_MEM(&d_resizeBGR,resize_size);
-        //create mat
-        resizeImg.create(rows,cols,CV_8UC3);
-    }
+//    if(rows==1024||cols==1280)
+//    {
+//        //need resize
+//        rows=512;
+//        cols=640;
+//        resize_size=rows*cols*sizeof(uchar3);
+//        CUDA_ALLOC_DEV_MEM(&d_resizeBGR,resize_size);
+//        //create mat
+//        resizeImg.create(rows,cols,CV_8UC3);
+//    }
 
     mono_size=rows*cols*sizeof(unsigned char);
-    CUDA_ALLOC_DEV_MEM(&d_blueChannel,mono_size);
-    CUDA_ALLOC_DEV_MEM(&d_redChannel,mono_size);
-    CUDA_ALLOC_DEV_MEM(&d_greenChannel,mono_size);
+//    CUDA_ALLOC_DEV_MEM(&d_blueChannel,mono_size);
+//    CUDA_ALLOC_DEV_MEM(&d_redChannel,mono_size);
+//    CUDA_ALLOC_DEV_MEM(&d_greenChannel,mono_size);
     CUDA_ALLOC_DEV_MEM(&d_compImg,mono_size);
-    CUDA_ALLOC_DEV_MEM(&d_monoImg,mono_size);
+//    CUDA_ALLOC_DEV_MEM(&d_monoImg,mono_size);
 //creat mat
     compImg.create(rows,cols,CV_8UC1);
-    monoImg.create(rows,cols,CV_8UC1);
-    red_ch.create(rows,cols,CV_8UC1);
-    green_ch.create(rows,cols,CV_8UC1);
-    blue_ch.create(rows,cols,CV_8UC1);
+//    monoImg.create(rows,cols,CV_8UC1);
+//    red_ch.create(rows,cols,CV_8UC1);
+//    green_ch.create(rows,cols,CV_8UC1);
+//    blue_ch.create(rows,cols,CV_8UC1);
     //point host ptr  to  output mat
-    h_resizeBGR=(uchar3*)resizeImg.ptr<unsigned char>(0);
+//    h_resizeBGR=(uchar3*)resizeImg.ptr<unsigned char>(0);
     h_compImg=(unsigned char*)compImg.ptr<unsigned char>(0);
-    h_monoImg=(unsigned char*)monoImg.ptr<unsigned char>(0);
-    h_blueChannel=(unsigned  char*)blue_ch.ptr<unsigned char>(0);
-    h_greenChannel=(unsigned  char*)green_ch.ptr<unsigned char>(0);
-    h_redChannel=(unsigned  char*)red_ch.ptr<unsigned char>(0);
+//    h_monoImg=(unsigned char*)monoImg.ptr<unsigned char>(0);
+//    h_blueChannel=(unsigned  char*)blue_ch.ptr<unsigned char>(0);
+//    h_greenChannel=(unsigned  char*)green_ch.ptr<unsigned char>(0);
+//    h_redChannel=(unsigned  char*)red_ch.ptr<unsigned char>(0);
 
     printf("GPU initalize done  \n");
 }
@@ -61,12 +61,12 @@ void cuda_proc::free_mem()
 
 
      CUDA_FREE_DEV_MEM(d_inputBGR);
-     if(_rows==1024||_cols==1280)
-         CUDA_FREE_DEV_MEM(d_resizeBGR);
-     CUDA_FREE_DEV_MEM(d_blueChannel);
-     CUDA_FREE_DEV_MEM(d_redChannel);
-     CUDA_FREE_DEV_MEM(d_greenChannel);
-     CUDA_FREE_DEV_MEM(d_monoImg);
+//     if(_rows==1024||_cols==1280)
+//         CUDA_FREE_DEV_MEM(d_resizeBGR);
+//     CUDA_FREE_DEV_MEM(d_blueChannel);
+//     CUDA_FREE_DEV_MEM(d_redChannel);
+//     CUDA_FREE_DEV_MEM(d_greenChannel);
+//     CUDA_FREE_DEV_MEM(d_monoImg);
      CUDA_FREE_DEV_MEM(d_compImg);
 
      printf(" GPU uninitialized! \n");

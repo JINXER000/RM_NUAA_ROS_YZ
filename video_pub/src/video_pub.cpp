@@ -119,12 +119,12 @@ int main(int argc, char **argv)
                         Size src_size(frame.cols,frame.rows);
                         if(src_size!=dist_size)   // resize to 640x512
                            resize(frame, frame, dist_size);
-        //                    vector<Mat> imgChannels;
-        //                    split(frame, imgChannels);
-        //                    Mat red_channel = imgChannels.at(2);
-        //                    Mat blue_channel = imgChannels.at(0);
-        //                    Mat mid_chn_img = red_channel - blue_channel;
-        //                    threshold(mid_chn_img, img_show, 70, 255, CV_THRESH_BINARY);
+//                            vector<Mat> imgChannels;
+//                            split(frame, imgChannels);
+//                            Mat red_channel = imgChannels.at(2);
+//                            Mat blue_channel = imgChannels.at(0);
+//                            Mat mid_chn_img = red_channel - blue_channel;
+//                            threshold(mid_chn_img, img_show, 70, 255, CV_THRESH_BINARY);
         //debug 1 image
         //        if(is_video_dbg)
         //        {

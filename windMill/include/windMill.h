@@ -58,7 +58,6 @@ class Rotate_box :public RotatedRect
 class windMill {
 public:
 
-	windMill(string &cfg_path);
     windMill()
     {
 
