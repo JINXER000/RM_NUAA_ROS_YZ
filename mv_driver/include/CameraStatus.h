@@ -6,16 +6,16 @@ typedef int CameraSdkStatus;
 
 
 /*³£ÓÃµÄºê*/
-#define SDK_SUCCESS(_FUC_)              (_FUC_ == CAMERA_STATUS_SUCCESS)
+#define SDK_SUCCESS(_FUC_)              ((_FUC_) == CAMERA_STATUS_SUCCESS)
 
-#define SDK_UNSUCCESS(_FUC_)            (_FUC_ != CAMERA_STATUS_SUCCESS)
+#define SDK_UNSUCCESS(_FUC_)            ((_FUC_) != CAMERA_STATUS_SUCCESS)
 
-#define SDK_UNSUCCESS_RETURN(_FUC_,RET) if((RET = _FUC_) != CAMERA_STATUS_SUCCESS)\
+#define SDK_UNSUCCESS_RETURN(_FUC_,RET) if((RET = (_FUC_)) != CAMERA_STATUS_SUCCESS)\
                                         {\
                                             return RET;\
                                         }
 
-#define SDK_UNSUCCESS_BREAK(_FUC_)      if(_FUC_ != CAMERA_STATUS_SUCCESS)\
+#define SDK_UNSUCCESS_BREAK(_FUC_)      if((_FUC_) != CAMERA_STATUS_SUCCESS)\
                                         {\
                                             break;\
                                         }

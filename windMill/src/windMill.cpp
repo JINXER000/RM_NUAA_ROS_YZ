@@ -67,223 +67,304 @@ Point get_target(Mat &srcImg)
   //way 2: find contour and minAreaRect
   return moment;
 }
-int windMill::process_windmill_B(Mat &srcImg,int &pix_x,int &pix_y)
+
+  int windMill::process_windmill_B(Mat &srcImg,int &pix_x,int &pix_y)
+  {
+    srcImg.copyTo(img_show);
+    bgr2binary(srcImg);
+    findContours(img_binary_link, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+
+    if (contours.size() == 0)
+    {
+      cout << "no contour!!" << endl;
+      return -1;
+    }
+    //int got_center = getCenter(img_binary_link);
+    //if (got_center != 0)
+    //{
+    //	printf("get center failed");
+    //}
+    LeafInfo target_leaf;
+
+    vector<LeafInfo> leaf_infos;
+    vector<int> wm_center_candidates;
+    int filtered_num = 0;
+    for (int i = 0; i < contours.size(); i++)
+    {
+      if (contours[i].size() < 40)
+      {
+        filtered_num++;
+        wm_center_candidates.push_back(i);   // likely to be center
+        continue;
+      }
+      //drawContours(img_show, contours, i, Scalar(200, 0, 0), 3);
+      LeafInfo leafInfo;
+      leafInfo.ellipseRect = fitEllipse(contours[i]);
+      //leafInfo.ellipseRect = minAreaRect(contours[i]);
+
+      int area = leafInfo.ellipseRect.size.area();
+      if (area < 500)
+      {
+        filtered_num++;
+        wm_center_candidates.push_back(i);   // likely to be center
+
+        continue;
+      }
+
+      if (leafInfo.ellipseRect.size.height > leafInfo.ellipseRect.size.width)
+      {
+        leafInfo.chang = leafInfo.ellipseRect.size.height;
+        leafInfo.kuan = leafInfo.ellipseRect.size.width;
+
+      }
+      else
+      {
+        leafInfo.kuan = leafInfo.ellipseRect.size.height;
+        leafInfo.chang = leafInfo.ellipseRect.size.width;
+
+      }
+      float w_div_h = leafInfo.chang / leafInfo.kuan;
+      if (w_div_h < 2)
+      {
+        // discrete contouors or other noises
+        filtered_num++;
+        continue;
+      }
+      else
+      {
+        Point2f lf_c_sum(0,0);
+        leafInfo.ellipseRect.points(leafInfo.vertices);
+        for (int i = 0; i < 4; i++)
+        {
+          lf_c_sum += leafInfo.vertices[i];
+          //line(img_show, leafInfo.vertices[i], leafInfo.vertices[(i + 1) % 4], Scalar(0, 255, 0));
+
+          if (pix_dist(leafInfo.vertices[i], leafInfo.vertices[(i + 1) % 4])>1.5*leafInfo.kuan)
+          {
+            Point2f temp_vec = Point2f(leafInfo.vertices[i] - leafInfo.vertices[(i + 1) % 4]);
+            leafInfo.vec_chang = temp_vec / norm(temp_vec);
+          }
+        }
+        leafInfo.leaf_center = lf_c_sum / 4;
+
+
+
+        leafInfo.externel_rect = leafInfo.ellipseRect.boundingRect();
+
+        //judge if target
+        Rect roi_rect = Rect(leafInfo.externel_rect.x - 5, leafInfo.externel_rect.y - 5, leafInfo.externel_rect.width + 10, leafInfo.externel_rect.height + 10);
+
+        Point tgt_pt_roi=judge_leaf_B(img_binary_link, roi_rect, 0, leafInfo.vertices);
+        if (tgt_pt_roi != Point(0, 0))
+        {
+          leafInfo.target_pix = tgt_pt_roi + Point(roi_rect.x, roi_rect.y);
+          circle(img_show, leafInfo.target_pix, 10, Scalar(255, 100, 0), 2);
+          leafInfo.istarget = true;
+          target_leaf = leafInfo;
+        }
+        else
+        {
+          leafInfo.istarget = false;
+        }
+        leaf_infos.push_back(leafInfo);
+
+      }
+
+
+    }
+    //if detected nothing , judge again
+    if (!target_leaf.istarget || target_leaf.target_pix == Point(0, 0))
+    {
+      for (int k = 0; k < leaf_infos.size(); k++)
+      {
+        //judge if target
+        Rect roi_rect = Rect(leaf_infos[k].externel_rect.x - 5, leaf_infos[k].externel_rect.y - 5, leaf_infos[k].externel_rect.width + 10, leaf_infos[k].externel_rect.height + 10);
+
+        Point tgt_pt_roi = judge_leaf_B(img_binary_link, roi_rect, 1, leaf_infos[k].vertices);
+
+        if (tgt_pt_roi != Point(0, 0))
+        {
+          leaf_infos[k].target_pix = tgt_pt_roi + Point(roi_rect.x, roi_rect.y);
+          circle(img_show, leaf_infos[k].target_pix, 10, Scalar(255, 100, 0), 2);
+          leaf_infos[k].istarget = true;
+          target_leaf = leaf_infos[k];
+        }
+        else
+        {
+          leaf_infos[k].istarget = false;
+        }
+
+
+
+      }
+    }
+
+      if (!target_leaf.istarget || target_leaf.target_pix == Point(0, 0))
+      {
+        return -1;
+
+      }
+    vector<Point> centers;
+    int valid_lf_num = contours.size() - filtered_num;
+    int focus = 843, dist = 800,real_length=60;
+    int pix_range = focus / dist*real_length;
+    for (int j = 0; j < wm_center_candidates.size(); j++)
+    {
+      int idx = wm_center_candidates[j];
+      // judge area and ratio
+      RotatedRect center_rect = minAreaRect(contours[idx]);
+      if (judge_center(center_rect) != 0)
+      {
+        continue;
+      }
+
+      //calc dist from tgt and all leafs
+        Point pix_sum(0, 0), ct_moment;
+      for (int k = 0; k < contours[idx].size(); k++)
+      {
+        pix_sum += contours[idx][k];
+      }
+      ct_moment = Point(pix_sum.x / contours[idx].size(), pix_sum.y / contours[idx].size());
+      //if (valid_lf_num == 1)  // only calculate dist and parellel
+      //{
+        float c2tgt = pix_dist(ct_moment, target_leaf.target_pix);
+        if (c2tgt > 1.3*target_leaf.chang || c2tgt < 0.5*target_leaf.chang)
+        {
+          continue;
+        }
+        //calc angle
+        Point2f vec_c2tgt = ct_moment - target_leaf.target_pix;
+        vec_c2tgt = vec_c2tgt / norm(vec_c2tgt);
+        Point2f vec_rect = target_leaf.vec_chang;
+
+        float prod = vec_rect.dot(vec_c2tgt);
+        if (fabs(prod) > 1.3 || fabs(prod) < 0.77)
+        {
+          continue;
+        }
+      //}
+        centers.push_back(ct_moment);
+
+
+    }
+
+    if (centers.size() == 1)
+    {
+      center_pix = centers[0];
+      circle(img_show, center_pix, 3, Scalar(0, 0, 255), 2);
+    }
+    else
+    {
+      printf("got NO center!");
+      return -1;
+    }
+    //predict motion
+    float theta = 20 / RAD2DEG; //degree
+    float cos_theta = cos(theta);
+    float sin_theta = sin(theta);
+
+    Point tgt2center = target_leaf.target_pix - center_pix;
+    float x = cos_theta*tgt2center.x - sin_theta*tgt2center.y;
+    float y = sin_theta*tgt2center.x+ cos_theta*tgt2center.y;
+    Point pred2center = Point(x, y);
+    final_target = pred2center + center_pix;
+    circle(img_show, final_target, 5, Scalar(0, 128, 100), 3);
+
+    //return pixels
+    pix_x=final_target.x;
+    pix_y=final_target.y;
+  }
+
+float windMill::pix_dist(Point pt1, Point pt2)
 {
-  srcImg.copyTo(img_show);
-  bgr2binary(srcImg);
-  findContours(img_binary_link, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-
-  if (contours.size() == 0)
-  {
-    cout << "no contour!!" << endl;
-    return -1;
-  }
-  //int got_center = getCenter(img_binary_link);
-  //if (got_center != 0)
-  //{
-  //	printf("get center failed");
-  //}
-  vector<RotatedRect> ellipse_leafs;
-  vector<Rect> ex_rects;
-  vector<Point2f> leaf_centers;
-  int filtered_num = 0;
-  for (int i = 0; i < contours.size(); i++)
-  {
-    if (contours[i].size() < 40)
-    {
-      filtered_num++;
-      continue;
-    }
-    //drawContours(img_show, contours, i, Scalar(200, 0, 0), 3);
-
-    RotatedRect leaf_rect = fitEllipse(contours[i]);
-    int area = leaf_rect.size.area();
-    if (area < 500)
-    {
-      filtered_num++;
-      continue;
-    }
-
-    int zhu_axis, fu_axis;
-    if (leaf_rect.size.height > leaf_rect.size.width)
-    {
-      zhu_axis = leaf_rect.size.height;
-      fu_axis = leaf_rect.size.width;
-    }
-    else
-    {
-      fu_axis = leaf_rect.size.height;
-      zhu_axis = leaf_rect.size.width;
-
-    }
-    float w_div_h = zhu_axis / fu_axis;
-    if (w_div_h < 2)
-    {
-      // discrete contouors or other noises
-      filtered_num++;
-      continue;
-    }
-    ellipse_leafs.push_back(leaf_rect);
-
-    Point2f vertices[4],center_sum,leaf_center;
-    leaf_rect.points(vertices);
-    for (int i = 0; i < 4; i++)
-    {
-      line(img_show, vertices[i], vertices[(i + 1) % 4], Scalar(0, 255, 0));
-      center_sum+=vertices[i];
-    }
-    leaf_center=center_sum/4;
-    leaf_centers.push_back(leaf_center);
-    Rect ex_rect = leaf_rect.boundingRect();
-    ex_rects.push_back(ex_rect);
-    //rectangle(img_show, ex_rect, Scalar(255, 0, 0));
-
-
-    Mat leaf_roi_link = img_binary_link(ex_rect);
-
-    Point tgt_pt_roi = find_connected(leaf_roi_link);
-    if (tgt_pt_roi != Point(0, 0))
-    {
-      Point tgt_pt = tgt_pt_roi + Point(ex_rect.x, ex_rect.y);
-      circle(img_show, tgt_pt, 10, Scalar(255, 100, 0), 2);
-      pix_x=tgt_pt.x;
-      pix_y=tgt_pt.y;
-    }
-
-
-    //line elipse
-    int valid_num=contours.size()-filtered_num;
-    for (int i=0;i<valid_num;i++)
-    {
-        //func1=, func2=
-    }
-
-  }
-
-
-}
-int windMill::process_windmill(Mat &srcImg)
-{
-  findContours(img_binary_link, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-
-  if (contours.size() == 0)
-  {
-    cout << "no contour!!" << endl;
-    return -1;
-  }
-  //int got_center = getCenter(img_binary_link);
-  //if (got_center != 0)
-  //{
-  //	printf("get center failed");
-  //}
-  vector<RotatedRect> armors;
-  RotatedRect tgt_armor;
-  vector<RotatedRect> ellipse_leaf(contours.size());
-  vector<float> likelihoods;
-  vector<Mat> leaf_rois;
-  vector<Rect> ex_rects;
-  int filtered_num = 0;
-  for (int i = 0; i < contours.size(); i++)
-  {
-    if (contours[i].size() < 40)
-    {
-      filtered_num++;
-      continue;
-    }
-    //drawContours(img_show, contours, i, Scalar(200, 0, 0), 3);
-
-    leaf_rect = fitEllipse(contours[i]);
-    int area = leaf_rect.size.area();
-    if (area < 500)
-    {
-      filtered_num++;
-      continue;
-    }
-
-    int zhu_axis, fu_axis;
-    if (leaf_rect.size.height > leaf_rect.size.width)
-    {
-      zhu_axis = leaf_rect.size.height;
-      fu_axis = leaf_rect.size.width;
-    }
-    else
-    {
-      fu_axis = leaf_rect.size.height;
-      zhu_axis = leaf_rect.size.width;
-
-    }
-    float w_div_h = zhu_axis / fu_axis;
-    if (w_div_h < 2)
-    {
-      // discrete contouors or other noises
-      filtered_num++;
-      continue;
-    }
-    else
-    {
-
-      Point2f vertices[4];
-      leaf_rect.points(vertices);
-      for (int i = 0; i < 4; i++)
-        line(img_show, vertices[i], vertices[(i + 1) % 4], Scalar(0, 255, 0));
-
-      Rect ex_rect = leaf_rect.boundingRect();
-      ex_rects.push_back(ex_rect);
-      //rectangle(img_show, ex_rect, Scalar(255, 0, 0));
-
-
-      Mat leaf_roi = img_binary(ex_rect);
-      leaf_rois.push_back(leaf_roi);
-
-
-
-      if (contours.size() - filtered_num == 1)  // only one leaf, is target
-      {
-        Point roi_tgt = get_target(leaf_roi);
-        Point tgt = Point(ex_rect.x, ex_rect.y) + roi_tgt;
-        circle(img_show, tgt, 6, Scalar(0, 0, 255), 2);
-      }
-      else if (contours.size() - filtered_num > 1)  // calc likelyhood
-      {
-        float angle_deg = leaf_rect.angle;
-        cv::Point2f leaf_roi_center = Point2f(0.5*ex_rect.width, 0.5*ex_rect.height);
-        cv::Mat rotimg = rotateImage(leaf_roi, leaf_roi_center, (angle_deg - 90));
-        Mat roi_sobelx = Mat(rotimg.size(), CV_8U, Scalar(0));
-        float likelihood = judge_leaf(rotimg, roi_sobelx);
-        likelihoods.push_back(likelihood);
-        /*			Rect roi_in_roi(Point(5, rect_radius + 0.5*leaf_width), Point(rect_radius * 2 - 5, rect_radius - 0.5*leaf_width));
-                cv::Mat rotimg_precise = rotimg(roi_in_roi);*/
-
-      }
-
-    }
-    //ellipse(img_show, leaf_rect, Scalar(0, 126, 126), 2);
-
-
-  }
-  int valid_num = contours.size() - filtered_num;
-  if (valid_num > 1)  //choose best
-  {
-    float max_likely = 0;
-    int res_idx = 0;
-    for (int j = 0; j <valid_num; j++)
-    {
-      if (likelihoods[j] > max_likely)
-      {
-        max_likely = likelihoods[j];
-        res_idx = j;
-      }
-    }
-    Point roi_tgt = get_target(leaf_rois[res_idx]);
-    Point tgt = Point(ex_rects[res_idx].x, ex_rects[res_idx].y) + roi_tgt;
-    circle(img_show, tgt, 6, Scalar(0, 0, 255), 2);
-
-  }
-
-
+  float dist_square = (pt1.x - pt2.x)*(pt1.x - pt2.x) + (pt1.y - pt2.y)*(pt1.y - pt2.y);
+  return sqrt(dist_square);
 
 }
 
+
+
+int windMill::bgr2binary(Mat &srcImg)
+{
+  if (srcImg.empty())
+    return -1;
+  srcImg.copyTo(img_bgr);
+  //method 1: split channels and substract
+  vector<Mat> imgChannels;
+  split(img_bgr, imgChannels);
+  Mat red_channel = imgChannels.at(2);
+  Mat blue_channel = imgChannels.at(0);
+  Mat mid_chn_img = red_channel - blue_channel;
+  threshold(mid_chn_img, img_binary, 70, 255, CV_THRESH_BINARY);
+  //method 2: use bgr threath
+  //cv::inRange(img_bgr, cv::Scalar(ap.h_min, ap.s_min, ap.v_min), cv::Scalar(ap.h_max, ap.s_max, ap.v_max), img_binary);
+
+  //mopho
+  Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
+  //morphologyEx(img_binary, img_binary_discrete, MORPH_OPEN, element, Point(-1, -1), 1);
+  morphologyEx(img_binary, img_binary_link, MORPH_DILATE, element, Point(-1, -1), 1);
+  imshow("binary img",img_binary_link);
+  //morphologyEx(img_binary, img_binary, MORPH_OPEN, element ,Point(-1, -1), 2);
+  return 0;
+
+}
+
+int windMill::judge_center(RotatedRect &bbox)
+{
+  float box_width = bbox.size.width;
+  float box_height = bbox.size.height;
+  float ratio = box_height / box_width;
+  float area = bbox.size.area();
+
+  if (ratio > max_hw_ratio_c || ratio < min_hw_ratio_c)
+  {
+    cout << "ratio not satisfied" << endl;
+    return -1;
+
+  }
+  if (area > max_area_c || area < min_area_c)
+  {
+    cout << "area not satisfied!" << endl;
+    return -1;
+  }
+
+  return 0;
+}
+Point windMill::judge_leaf_B(Mat& bi_img, Rect & roi_rect, bool is_clear,Point2f *vertices)
+{
+  Mat leaf_roi_link;
+  limitRect(roi_rect, dist_size_1);
+
+  if (is_clear)
+  {
+    leaf_roi_link = bi_img(roi_rect).clone();
+    Point2f vertices_roi[4];
+    Point2f translate(roi_rect.x, roi_rect.y);
+    for (int k = 0; k < 4; k++)
+    {
+      vertices_roi[k] = vertices[k] - translate;
+    }
+    //clear outliers
+    for (int n = 0; n < leaf_roi_link.rows; n++)
+    {
+      for (int m = 0; m < leaf_roi_link.cols; m++)
+      {
+        if (!isInROI(Point(m, n), vertices_roi))
+        {
+          leaf_roi_link.at<unsigned char>(n, m) = 0;
+        }
+
+      }
+    }
+
+  }
+  else
+  {
+    leaf_roi_link = bi_img(roi_rect);
+  }
+  Point tgt_pt_roi = find_connected(leaf_roi_link);
+  return tgt_pt_roi;
+}
 Point windMill::find_connected(Mat &binary_img)
 {
   Mat labels, img_color, stats;
@@ -319,16 +400,15 @@ Point windMill::find_connected(Mat &binary_img)
   }
   if (tgt_lables.size() == 1)
   {
-
+    printf("got target");
     //int unit_x = stats.at<uchar>(0,tgt_lables[0]), unit_y = stats.at<uchar>(1,tgt_lables[0]);
     //int area = stats.at<uchar>(4,tgt_lables[0]);
     //int width = stats.at<uchar>(2,tgt_lables[0]), height = stats.at<uchar>(3,tgt_lables[0]);
     //float wh_ratio = float(width) / float(height);
-    /*	Point tgt_point(unit_x+0.5*width,unit_y+0.5*height);*/
+  /*	Point tgt_point(unit_x+0.5*width,unit_y+0.5*height);*/
     float center_x = kernel.at<double>(tgt_lables[0], 0);
     float center_y = kernel.at<double>(tgt_lables[0], 1);
     Point tgt_point(center_x,center_y );
-    std::cout<<"\n point of windmill"<<tgt_point<<endl;
     return tgt_point;
   }
   else
@@ -338,252 +418,7 @@ Point windMill::find_connected(Mat &binary_img)
   }
 
 }
-float windMill::pix_dist(Point pt1, Point pt2)
-{
-  float dist_square = (pt1.x - pt2.x)*(pt1.x - pt2.x) + (pt1.y - pt2.y)*(pt1.y - pt2.y);
-  return sqrt(dist_square);
 
-}
-
-
-int windMill::test_video( Mat &srcImg, string &video_path)
-{
-  VideoCapture capture;
-  capture.open(video_path);
-  if (!capture.isOpened())
-  {
-    std::cout << "fail to open" << std::endl;
-    exit(0);
-  }
-  capture.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-
-  while (capture.read(srcImg))
-  {
-    //        if (Size(srcImg.cols, srcImg.rows) != dist_size_1)
-    //            resize(srcImg, srcImg, dist_size_1);
-    int pix_x,pix_y;
-    process_windmill_B(srcImg,pix_x,pix_y);
-
-
-    imshow("bgrImg", img_show);
-    char key = waitKey(1);
-    if (key == 27 || key == 'q' || key == 'Q') {
-      break;
-      // writer.release();
-    }
-    if (key == 'z')
-      system("pause");
-    if (key == 's') {
-      false_idx++;
-
-      string saveName_src =
-          false_img_prefix + num2str(false_idx) + "falsesrc.jpg";
-      imwrite(saveName_src, srcImg);
-
-    }
-
-
-  }
-  return 0;
-}
-
-int windMill::bgr2binary(Mat &srcImg)
-{
-  if (srcImg.empty())
-    return -1;
-  srcImg.copyTo(img_bgr);
-  //method 1: split channels and substract
-  vector<Mat> imgChannels;
-  split(img_bgr, imgChannels);
-  Mat red_channel = imgChannels.at(2);
-  Mat blue_channel = imgChannels.at(0);
-  Mat mid_chn_img = red_channel - blue_channel;
-  threshold(mid_chn_img, img_binary, 70, 255, CV_THRESH_BINARY);
-  //method 2: use bgr threath
-  //cv::inRange(img_bgr, cv::Scalar(ap.h_min, ap.s_min, ap.v_min), cv::Scalar(ap.h_max, ap.s_max, ap.v_max), img_binary);
-
-  //mopho
-  Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
-  //morphologyEx(img_binary, img_binary_discrete, MORPH_OPEN, element, Point(-1, -1), 1);
-  morphologyEx(img_binary, img_binary_link, MORPH_DILATE, element, Point(-1, -1), 1);
-  //morphologyEx(img_binary, img_binary, MORPH_OPEN, element ,Point(-1, -1), 2);
-  return 0;
-
-}
-
-int  windMill::get_armor(const Mat &srcImg)
-{
-
-  Point seed_pt = Point(10, 10);
-
-  int value = img_binary.at<unsigned char>(seed_pt);
-  while (value != 0)
-  {
-    if(seed_pt.x<srcImg.cols)
-      seed_pt.x+=10;
-    value=img_binary.at<unsigned char>(seed_pt);
-  }
-
-
-  floodFill(img_binary, seed_pt, Scalar(255));
-
-  vector<RotatedRect> armor_candidate;
-
-  //findContours(img_binary, contours, hierarchy, CV_RETR_LIST, CHAIN_APPROX_TC89_KCOS);
-
-  for (int i = 0; i < contours.size(); i++)
-  {
-    drawContours(img_show, contours, i, Scalar(200, 0, 0),3);
-    //apply_constrain
-    RotatedRect bbox = minAreaRect(contours[i]);
-    int is_armor=judge_armor(bbox);
-    if (!is_armor)
-    {
-      armor_candidate.push_back(bbox);
-      Point armor_center = bbox.center;
-      line(img_show, center_pix, armor_center, Scalar(0, 0, 240), 3);
-      Mat leaf_roi = cut_leaf_roi(bbox);
-      bool is_tgt_leaf=judge_leaf(leaf_roi,leaf_roi);
-    }
-  }
-  if (armor_candidate.size() == armor_num+1)
-  {
-    //succeed shot
-  }
-  else if(armor_candidate.size() > armor_num + 1)
-  {
-    //error detect?   break
-    return -1;
-  }
-  else //keep shooting
-  {
-
-  }
-  armor_num = armor_candidate.size();
-  if (armor_candidate.size() == 0)
-  {
-    cout << "no armor candidate!!" << endl;
-    return -1;
-  }
-  if (armor_candidate.size() > 2)
-  {
-    cout << "debug here" << endl;
-  }
-  return 0;
-}
-int windMill::judge_armor(RotatedRect &bbox)
-{
-  float box_width = bbox.size.width;
-  float box_height = bbox.size.height;
-  float ratio = box_height / box_width;
-  float area = bbox.size.area();
-
-  if (ratio > max_hw_ratio || ratio < min_hw_ratio)
-  {
-    cout << "ratio not satisfied" << endl;
-    return -1;
-
-  }
-  if (area > max_area || area < min_area)
-  {
-    cout << "area not satisfied!" << endl;
-    return -1;
-  }
-
-  return 0;
-}
-int windMill::getCenter(const Mat &img_binary)
-{
-
-  //findContours(img_binary, contours, hierarchy, CV_RETR_LIST, CHAIN_APPROX_TC89_KCOS);
-
-  for (int i=0;i<contours.size();i++)
-  {
-    if (contours[i].size() < 10||contours[i].size() > 30)
-      continue;
-    drawContours(img_show, contours, i, Scalar(0, 200, 0), 3);
-    RotatedRect bbox = minAreaRect(contours[i]);
-
-    int is_center = judge_center(bbox);//is out?  propotion of light?
-
-    if (!is_center)
-    {
-      center_candidate.push_back(bbox);
-    }
-  }
-  if (center_candidate.size() == 1)
-  {
-    center_pix = center_candidate[0].center;
-    return 0;
-
-  }
-  else
-  {
-    return -1;
-  }
-}
-int windMill::judge_center(RotatedRect &bbox)
-{
-  float box_width = bbox.size.width;
-  float box_height = bbox.size.height;
-  float ratio = box_height / box_width;
-  float area = bbox.size.area();
-
-  if (ratio > max_hw_ratio_c || ratio < min_hw_ratio_c)
-  {
-    cout << "ratio not satisfied" << endl;
-    return -1;
-
-  }
-  if (area > max_area_c || area < min_area_c)
-  {
-    cout << "area not satisfied!" << endl;
-    return -1;
-  }
-
-  return 0;
-}
-
-float windMill::judge_leaf(Mat &srcLeaf,Mat& distleaf)
-{
-  //srcLeaf=imread(leaf_path,0);
-  //resize(srcLeaf, srcLeaf, Size(100,27));
-  //Mat kernel = (Mat_<float>(3, 2) << 2, 7, 10, 0, 2, 7)/28;
-  //filter2D(srcLeaf, distleaf, CV_8U, kernel);
-  Sobel(srcLeaf, distleaf, -1, 1, 0);
-  //way 1: calc jump cnt
-  int jump_cnt = 0,threth=30,white_cnt=0;
-
-  for (int j = 0.5*distleaf.rows-1; j <  0.5*distleaf.rows +1; j++)
-  {
-    int is_white_now=0, is_white_last=0;
-    for (int i = 0; i < distleaf.cols; i++)
-    {
-      is_white_now = (distleaf.at<uchar>(j, i)>128);
-      if (is_white_now)
-        white_cnt++;
-      if (i > 0)
-      {
-        if (is_white_last != is_white_now)
-        {
-          jump_cnt++;
-        }
-      }
-      is_white_last = is_white_now;
-    }
-  }
-  int d1_max = 50, d1_min = 5;
-  float p1 = float(jump_cnt - d1_min) / float(d1_max - d1_min);
-  //way2: find contour and calc size
-  //vector<vector<Point>> leaf_cts;
-  //findContours(srcLeaf, leaf_cts, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-
-  //int ct_size = leaf_cts.size();
-  /*float white_ratio = float(white_cnt) / float(srcLeaf.cols*srcLeaf.rows);*/
-
-  printf("ok");
-  return p1;
-}
 cv::Mat windMill::rotateImage(const cv::Mat& source, cv::Point2f center, double angle)
 {
   cv::Mat rot_mat = cv::getRotationMatrix2D(center, angle, 1.0);
@@ -596,80 +431,4 @@ void  windMill::limitRect(Rect &location, Size sz)
 {
   Rect window(Point(0, 0), sz);
   location = location & window;
-}
-Mat  windMill::cut_leaf_roi(RotatedRect &bbox)
-{
-
-  Point2f leaf_pts[4];
-  bbox.points(leaf_pts);
-  //caculate dists to center
-  float dist[4];
-  for (int i = 1; i < 4; i++)
-  {
-    dist[i] = pix_dist(center_pix, leaf_pts[i]);
-
-  }
-
-
-  //bubble sort
-  int i, j;
-  for (i = 3; i > 0; i--)
-  {
-    for (j = 0; j < i; j++)
-    {
-      if (dist[j] > dist[j + 1])
-      {
-        swap(dist[j], dist[j + 1]);
-        swap(leaf_pts[j], leaf_pts[j + 1]);
-      }
-    }
-  }
-  float leaf_height;
-  float leaf_width = pix_dist(leaf_pts[0], leaf_pts[1]);
-  cv::Point2f dir =  bbox.center-static_cast<cv::Point2f>(center_pix) ;
-  dir = dir / norm(dir);
-  Point2f dir_ccw90(dir.y, -dir.x);
-  Point2f dir_cw90(-dir.y, dir.x);
-
-  Point2f real_leaf_pt[4];
-  real_leaf_pt[0] = static_cast<cv::Point2f>(center_pix) + dir_cw90*leaf_width / 2;
-  real_leaf_pt[1] = static_cast<cv::Point2f>(center_pix) + dir_ccw90*leaf_width / 2;
-
-  Point2f test_dir = leaf_pts[0] - real_leaf_pt[0];
-  float paral_deg = dir.dot(test_dir);
-  if (fabs(paral_deg) < 1)
-  {
-    real_leaf_pt[2] = leaf_pts[0];
-    real_leaf_pt[3] = leaf_pts[1];
-    leaf_height = pix_dist(leaf_pts[0], real_leaf_pt[0]);
-  }
-  else
-  {
-    real_leaf_pt[2] = leaf_pts[1];
-    real_leaf_pt[3] = leaf_pts[0];
-    leaf_height = pix_dist(leaf_pts[1], real_leaf_pt[0]);
-
-  }
-  Point2f leaf_center(0,0);
-  for (auto &pt : real_leaf_pt)
-  {
-    leaf_center += pt;
-  }
-  leaf_center /= 4;
-  // get rect roi
-
-  float rect_radius =pix_dist(leaf_center,real_leaf_pt[0]);
-  cv::Point2f bdry_offset(rect_radius, rect_radius);
-  Rect leaf_roi_rect(leaf_center - bdry_offset, leaf_center + bdry_offset);
-  limitRect(leaf_roi_rect, img_bgr.size());
-  Mat leaf_roi= img_binary(leaf_roi_rect);  //use bianry indeed
-  // generate rotrect and rotate
-  //Size2f leaf_size(leaf_width, leaf_height);
-  float angle_deg = -atan(dir.y / dir.x)*RAD2DEG;
-  //RotatedRect leaf_rotbox(leaf_center, leaf_size, angle_deg);
-  cv::Point2f leaf_roi_center = bdry_offset;
-  cv::Mat rotimg = rotateImage(leaf_roi, bdry_offset, -angle_deg);
-  Rect roi_in_roi(Point(5, rect_radius + 0.5*leaf_width), Point(rect_radius * 2 - 5, rect_radius - 0.5*leaf_width));
-  cv::Mat rotimg_precise = rotimg(roi_in_roi);
-  return rotimg_precise;
 }

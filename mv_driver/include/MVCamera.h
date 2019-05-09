@@ -16,39 +16,42 @@ using namespace cv;
 
 class MVCamera {
 public:
-  static int    Init(int id = 0);
-  static int    Play();
-  static int    Read();
-  static int    GetFrame(Mat& frame,bool is_color);
-  static int    Stop();
-  static int    Uninit();
-  static int    SetExposureTime(bool auto_exp, double exp_time = 10000);
-  static double GetExposureTime();
-  static int    SetLargeResolution(bool if_large_resolution);
-  static Size   GetResolution();
-  static int    SetGain(double gain);
-  static double GetGain();
-  static int    SetWBMode(bool auto_wb = true);
-  static int    GetWBMode(bool & auto_wb);
-  static int    SetOnceWB();
+    int    Init(int id = 0);
+    int    Play();
+    int    Read();
+    int    GetFrame(Mat& frame,bool is_color);
+    int    Stop();
+    int    Uninit();
+    int    SetExposureTime(bool auto_exp, double exp_time = 10000);
+    double GetExposureTime();
+    int    SetLargeResolution(bool if_large_resolution);
+    Size   GetResolution();
+    int    SetGain(double gain);
+    double GetGain();
+    int    SetWBMode(bool auto_wb = true);
+    int    GetWBMode(bool & auto_wb);
+    int    SetOnceWB();
+    int GetFrame_B(Mat &frame,bool is_color);
 
-  static int                     iCameraCounts;
-	static int                     iStatus;
-	static int                     hCamera;
-  static int                     channel;
 
-  //static tSdkCameraDevInfo       tCameraEnumList[4];
-	static tSdkCameraCapbility     tCapability;      //设备描述信息
-	static tSdkFrameHead           sFrameInfo;
-	static unsigned char           *	pbyBuffer;
-  static unsigned char           * g_pRgbBuffer[2];     //处理后数据缓存区
-  static int                     ready_buffer_id;
-  static bool                    stopped;
-  static bool                    updated;
-  static mutex                   mutex1;
+    int                     iCameraCounts;
+    int                     iStatus;
+    int                     hCamera;
+    int                     channel;
 
-private:
-  MVCamera();
+    //static tSdkCameraDevInfo       tCameraEnumList[4];
+    tSdkCameraCapbility     tCapability;      //设备描述信息
+    tSdkFrameHead           sFrameInfo;
+    unsigned char           *	pbyBuffer=NULL;
+    unsigned char           * g_pRgbBuffer[2];     //处理后数据缓存区
+    int                     ready_buffer_id;
+    bool                    stopped;
+    bool                    updated;
+    mutex                   mutex1;
+    IplImage *iplImage = NULL;
+
+
+    MVCamera();
 };
 
 

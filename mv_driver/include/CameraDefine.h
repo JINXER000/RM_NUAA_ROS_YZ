@@ -71,6 +71,17 @@ typedef enum
     MIRROR_DIRECTION_VERTICAL       //垂直镜像
 }emSdkMirrorDirection;
 
+/// @ingroup MV_ENUM_TYPE
+/// \~chinese 图像的旋转操作
+/// \~english Rotation of the image
+typedef enum
+{
+	ROTATE_DIRECTION_0=0,		///< \~chinese 不旋转		\~english Do not rotate
+	ROTATE_DIRECTION_90=1,		///< \~chinese 逆时针90度	\~english Counterclockwise 90 degrees
+	ROTATE_DIRECTION_180=2,		///< \~chinese 逆时针180度	\~english Counterclockwise 180 degrees
+	ROTATE_DIRECTION_270=3,		///< \~chinese 逆时针270度	\~english Counterclockwise 270 degrees
+}emSdkRotateDirection;
+
 //相机视频的帧率
 typedef enum
 {

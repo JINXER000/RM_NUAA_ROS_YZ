@@ -50,13 +50,13 @@ int frame_process(Mat &bgrImg)
     }else
     {
         is_find_enemy=0;
-        X_bias = 850;
-        Y_bias = 850;
-        tgt_pos.xlocation=850;
-        tgt_pos.ylocation=850;
-        tgt_pos.depth=850;
-        tgt_pos.angX=850;
-        tgt_pos.angY=850;
+        X_bias = 30000;
+        Y_bias = 30000;
+        tgt_pos.xlocation=30000;
+        tgt_pos.ylocation=30000;
+        tgt_pos.depth=30000;
+        tgt_pos.angX=30000;
+        tgt_pos.angY=30000;
 
     }
 
@@ -114,8 +114,8 @@ public:
         fps_pub=nh_.advertise<std_msgs::Float32>("/fps",1);
         is_large_pub=nh_.advertise<std_msgs::Bool>("/mv_param/is_large",3);
         //200hz timer
-           visionTimer = nh_.createTimer(ros::Duration(0.02),&ImageConverter::timely_update,this);
-            visionTimer.start();
+//           visionTimer = nh_.createTimer(ros::Duration(0.01),&ImageConverter::timely_update,this);
+//            visionTimer.start();
     }
 
     ~ImageConverter()
@@ -195,14 +195,15 @@ public:
             return;
         }
 
-        //process_frame();
+        process_frame();
 
 
 
-//        //    std::cout <<" time of img callback: "<< float( cv::getTickCount() - begin_counter )/cv::getTickFrequency()<<std::endl;
-//        float FPS=1/cb_tim.elapsed();
-//        fps_msg.data=FPS;
-//        fps_pub.publish(fps_msg);
+//            std::cout <<" ==========time of img callback: ========="<< float( cv::getTickCount() - begin_counter )/cv::getTickFrequency()<<std::endl;
+//            begin_counter= cv::getTickCount();
+            //        float FPS=1/cb_tim.elapsed();
+        fps_msg.data=1;
+        fps_pub.publish(fps_msg);
 //            //print fps
 ////        gtimer.Stop();
 ////        std::cout<<"timer fly of 1 frame "<<gtimer.Elapsed()<<std::endl;
@@ -233,8 +234,8 @@ public:
         if(ifshow)
         {
             cv::imshow("detection result", img_to_show);
-            if(!roi_to_show.empty())
-                cv::imshow("track window", roi_to_show);
+//            if(!roi_to_show.empty())
+//                cv::imshow("track window", roi_to_show);
             //    if(!markSensor.img_out.empty())
             //      cv::imshow("feed to number", markSensor.img_out);
             char key=cv::waitKey(1);

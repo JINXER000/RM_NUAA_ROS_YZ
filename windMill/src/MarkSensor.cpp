@@ -396,9 +396,9 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   float top = box.y - status*box.height;
   float bot = box.y + box.height * (status+1);
   left = left < 0 ? 0 : left;
-  right = right >= cp.cols ? cp.cols : right;
+  right = right >= img.cols ? img.cols : right;
   top = top < 0 ? 0 : top;
-  bot = bot >= cp.rows ? cp.rows : bot;
+  bot = bot >= img.rows ? img.rows : bot;
   Rect ROI(left, top, (right - left), (bot - top));
   /// Get Mask
   ROI_bgr = img(ROI).clone();
@@ -639,12 +639,12 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   float tanX=(target.x - cp.cx) / cp.fx;
   float tanY=(target.y - cp.cy) / cp.fy;
   angX=atan(tanX)*RAD2DEG;
-  angY=atan(tanX)*RAD2DEG;
+  angY=atan(tanY)*RAD2DEG;
   if(mp.if_calc_depth)
   {
     begin_time[5]=cv::getTickCount();
     int depth=calcDepth(marker);
-//    Z = depth;
+    Z = depth;
 //    float X = tanX*Z;
 //    float Y = tanY*Z;
     printf("=======Get target: %f %f %f========\n", angX, angY, depth);
