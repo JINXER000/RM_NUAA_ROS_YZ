@@ -72,7 +72,7 @@ MarkerParams:
     marker_size_max:  200
 
 is_record: False
-ifshow: False
+ifshow: True
 if_calc_depth: False
 if_analyze_motion: False
 cam_idx: 2

@@ -15,6 +15,8 @@
 #include <tf/tf.h>
 #include "dafu.h"
 #include "windMill.h"
+#include "dafu_detect.h"
+
 using namespace std;
 using namespace cv;
 Mat img_src,img_to_show,roi_to_show;
@@ -26,7 +28,7 @@ int led_type = 0,  capIdx = 1;
 MarkSensor *markSensor=NULL;
 windMill *wind_mill=NULL;
 serial_common::Guard tgt_pos;
-bool is_windMill_mode=false;
+bool is_windMill_mode=true;
 bool got_img=false;
 
 int frame_process(Mat &bgrImg)
@@ -194,6 +196,7 @@ public:
             ROS_ERROR("cv_bridge exception: %s", e.what());
             return;
         }
+//            resize(img_src,img_src,Size(640,480));
 
         process_frame();
 
@@ -216,10 +219,35 @@ public:
         {
             //      img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
 //            dafu_process(img_src,pix_x,pix_y);
-            wind_mill->process_windmill_B(img_src,pix_x,pix_y);
+//            wind_mill->process_windmill_B(img_src,pix_x,pix_y);
+            Point tgtarmor=dafu_ZSZS(img_src,markSensor->ap.is_red);
             tgt_pos.xlocation=pix_x;
             tgt_pos.ylocation=pix_y;
-            img_to_show=wind_mill->img_show;
+            img_to_show=img_src;
+
+            if (tgtarmor!=Point(0,0)) {
+                is_find_enemy = 1;
+                tgt_pos.xlocation=tgtarmor.x;
+                tgt_pos.ylocation=tgtarmor.y;
+                tgt_pos.depth=0;
+                tgt_pos.angX=0;
+                tgt_pos.angY=0;
+
+                std::cout<<"target pix::  "<<pix_x<<","<<pix_y<<std::endl;
+            }else
+            {
+                is_find_enemy=0;
+                X_bias = 30000;
+                Y_bias = 30000;
+                tgt_pos.xlocation=30000;
+                tgt_pos.ylocation=30000;
+                tgt_pos.depth=30000;
+                tgt_pos.angX=30000;
+                tgt_pos.angY=30000;
+
+            }
+
+
         }else   //normal
         {
             frame_process(img_src);
@@ -250,9 +278,9 @@ public:
 
                 if(ifshow)
                 {
-                    //      sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_show).toImageMsg();
-                    //      show_img_msg->header.stamp=ros::Time::now();
-                    //      show_image_pub_.publish(show_img_msg);
+//                          sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_show).toImageMsg();
+//                          show_img_msg->header.stamp=ros::Time::now();
+//                          show_image_pub_.publish(show_img_msg);
 
                     //      sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->led_mask).toImageMsg();
                     //      binary_img_msg->header.stamp=ros::Time::now();
