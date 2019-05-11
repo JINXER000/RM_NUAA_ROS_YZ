@@ -28,7 +28,7 @@ int led_type = 0,  capIdx = 1;
 MarkSensor *markSensor=NULL;
 windMill *wind_mill=NULL;
 serial_common::Guard tgt_pos;
-bool is_windMill_mode=true;
+bool is_windMill_mode=false;
 bool got_img=false;
 
 int frame_process(Mat &bgrImg)

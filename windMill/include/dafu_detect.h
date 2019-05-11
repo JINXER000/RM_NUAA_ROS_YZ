@@ -37,4 +37,22 @@ int bgr2binary(Mat &srcImg, bool is_red);
 
 extern Mat dafu_ZS_img;
 
+class FilterOutStep
+{
+public:
+    Point2f Filter(Point2f InputPixel,float InterframeError,int FilterLength );
+    //FilterOutStep();
+private:
+
+    Point2f LastInputPixel=Point2f(320,200);
+    Point2f CurrentInputPixel=Point2f(320,200);
+    int jump_cnt=0; //
+
+
+};
+
+
+
+extern FilterOutStep FilterShootArmourCenter;
+
 #endif

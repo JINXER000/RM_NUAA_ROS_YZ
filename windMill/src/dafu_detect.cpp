@@ -69,6 +69,38 @@ int bgr2binary(Mat &srcImg, bool is_red)
   }
   threshold(mid_chn_img, threshold_frame, 70, 255, CV_THRESH_BINARY);
 }
+
+
+
+FilterOutStep FilterShootArmourCenter;
+Point2f FilterOutStep::Filter(Point2f InputPixel,float InterframeError,int FilterLength )
+{
+
+
+    LastInputPixel=CurrentInputPixel;
+    CurrentInputPixel=InputPixel;
+
+    if(GetPixelLength(LastInputPixel,CurrentInputPixel) > InterframeError)
+    {
+        jump_cnt++;
+        if(jump_cnt>=FilterLength)
+        {
+            jump_cnt=0;
+            return CurrentInputPixel;
+        }
+        else
+        {
+            LastInputPixel;
+        }
+    }
+    else
+    {
+      return CurrentInputPixel;
+    }
+
+}
+
+
 Point2f  predcit(float angle_degree,Mat frame) //calculate  predcit
 {
     float theta=angle_degree/180*3.14;
@@ -353,6 +385,7 @@ void DetectDafuArmor(Mat &grayImage, Mat &dstImage)
 
     }
 
+    ShootArmourCenter=FilterShootArmourCenter.Filter(ShootArmourCenter,8,10);
 
     circle(dstImage, Point(ShootArmourCenter.x, ShootArmourCenter.y), 20, (0, 255, 255), 2);
 
