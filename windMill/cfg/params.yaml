@@ -67,12 +67,12 @@ MarkerParams:
     marker_vertical_angle:  10     # no use
     marker_direction_angle:  40    # angle between c2c and horizon
     marker_ratio_min:  0.8    #  width / height
-    marker_ratio_max:  5
+    marker_ratio_max:  7
     marker_size_min:  10    #  c2c distance
     marker_size_max:  200
 
 is_record: False
-ifshow: False
+ifshow: True
 if_calc_depth: False
 if_analyze_motion: False
 cam_idx: 2
