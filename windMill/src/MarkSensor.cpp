@@ -92,6 +92,36 @@ MarkSensor::MarkSensor(AlgoriParam &ap_,CamParams &cp_,MarkerParams &mp_):
   distCoeffs = (Mat_<double>(1,4) <<cp.distcoef1, cp.distcoef2, 0, 0);
 
 }
+int MarkSensor::bgr2binary(Mat &srcImg, Mat &img_out,int method)
+{
+  if (srcImg.empty())
+    return -1;
+  if(method==1)
+  {
+    //method 1: split channels and substract
+    vector<Mat> imgChannels;
+    split(srcImg, imgChannels);
+    Mat red_channel = imgChannels.at(2);
+    Mat blue_channel = imgChannels.at(0);
+    Mat mid_chn_img;
+    if(ap.is_red)
+    {
+        mid_chn_img = red_channel - blue_channel;
+
+    }else
+    {
+        mid_chn_img = blue_channel-red_channel;
+    }
+    threshold(mid_chn_img, img_out, 60, 255, CV_THRESH_BINARY);
+  }else if(method==2)
+  {
+    cv::inRange(srcImg,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),
+                cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),img_out);
+
+  }else
+    return -1;
+  return 0;
+}
 
 int MarkSensor::PCALEDStrip(vector<cv::Point> &contour, RotRect &LED)
 {
@@ -370,7 +400,8 @@ int MarkSensor::DetectLEDMarker(const Mat &img, Marker &res_marker)
   img.copyTo(img_hsv);
   /*actually we use bgr*/
   begin_time[4]=cv::getTickCount();
-  cv::inRange(img_hsv,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),led_mask);
+  bgr2binary(img_hsv,led_mask,1);
+//  cv::inRange(img_hsv,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),led_mask);
   std::cout <<" TO BINARY : "<< float( cv::getTickCount() - begin_time[4] )/cv::getTickFrequency()<<std::endl;
 
   //Mat led_erode;
@@ -413,8 +444,9 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
     return -1;
   }
   begin_time[4]=cv::getTickCount();
+  bgr2binary(ROI_bgr,ROI_led_mask,1);
 
-  cv::inRange(ROI_bgr,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),ROI_led_mask);
+//  cv::inRange(ROI_bgr,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),ROI_led_mask);
   std::cout <<" ROI TO BINARY : "<< float( cv::getTickCount() - begin_time[4] )/cv::getTickFrequency()<<std::endl;
 
   /// Get Marker

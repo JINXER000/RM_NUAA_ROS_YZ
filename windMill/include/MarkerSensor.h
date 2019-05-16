@@ -133,6 +133,8 @@ public :
 	int GammaCorrect();
   int calcDepth(Marker &marker);
   int judge_motion();
+  int bgr2binary(Mat &srcImg, Mat &img_out,int method);
+
   AlgoriParam ap;
   CamParams cp;
   MarkerParams mp;

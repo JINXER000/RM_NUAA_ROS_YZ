@@ -99,7 +99,7 @@ int main (int argc, char** argv)
 
 #ifdef GUARD_MODE
     //发布主题
-    ros::Publisher read_pub = nh.advertise<std_msgs::String>("/serial/read", 33);
+    ros::Publisher read_pub = nh.advertise<std_msgs::String>("/serial/read", 1);
 #endif
 
     //设置串口属性，并打开串口
@@ -139,7 +139,7 @@ int main (int argc, char** argv)
     }
 
 
-    ros::Rate loop_rate(200);
+    ros::Rate loop_rate(250);
     while(ros::ok())
     {
         if(ser.available()){

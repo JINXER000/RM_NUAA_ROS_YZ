@@ -28,9 +28,9 @@ public:
     ros::Subscriber cfg_exp_sub;
     ros::Subscriber is_large_sub;
     ros::Subscriber is_rcd_sub;
-    int image_width_, image_height_, framerate_, exposure_=2000, brightness_, contrast_, saturation_, sharpness_, focus_,
+    int image_width_, image_height_, framerate_, exposure_=1200, brightness_, contrast_, saturation_, sharpness_, focus_,
     white_balance_, gain_;
-    bool large_resolution_=true,is_record_=false,autofocus_, autoexposure_=false, auto_white_balance_;
+    bool large_resolution_=false,is_record_=false,autofocus_, autoexposure_=false, auto_white_balance_;
     string rcd_path_;
     VideoSaver saver;
     clock_t begin_time;

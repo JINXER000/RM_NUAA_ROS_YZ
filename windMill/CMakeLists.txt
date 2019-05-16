@@ -145,6 +145,7 @@ include_directories(
      src/templetetracking.cpp
      src/dafu.cpp
      src/windMill.cpp
+     src/dafu_detect.cpp
      )
 
 ## Rename C++ executable without prefix
