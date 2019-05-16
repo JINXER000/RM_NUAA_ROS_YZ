@@ -135,7 +135,7 @@ Point2f  predcit(float angle_degree,Mat frame) //calculate  predcit
     return pred;
 }
 
-Point dafu_ZSZS(Mat &srcImg, bool is_red)
+Point dafu_ZSZS(Mat &srcImg, bool is_red,bool is_cw)
 {
     bgr2binary(srcImg,is_red);
 
@@ -147,8 +147,8 @@ Point dafu_ZSZS(Mat &srcImg, bool is_red)
     static Mat kernel_open = getStructuringElement(MORPH_RECT, Size(2, 2), Point(-1, -1));
     morphologyEx(threshold_frame, threshold_frame, MORPH_OPEN, kernel_open);
 
-    //imshow("threshold_frame",threshold_frame);
-    DetectDafuArmor(threshold_frame, srcImg);
+    imshow("threshold_frame",threshold_frame);
+    DetectDafuArmor(threshold_frame, srcImg,is_cw);
     std::cout<<"dafu tgt is"<<PredcitShootArmourCenter<<std::endl;
     if(IsDetectDafuCenter==0)
     {
@@ -168,7 +168,7 @@ void predcit(float angle_degree)
 }
 
 
-void DetectDafuArmor(Mat &grayImage, Mat &dstImage)
+void DetectDafuArmor(Mat &grayImage, Mat &dstImage,bool is_cw)
 {
     Point2f DafuCenterPitchYawError;               //大符中心坐标
     Point2f ShootArmourPitchYawError;
@@ -414,14 +414,21 @@ void DetectDafuArmor(Mat &grayImage, Mat &dstImage)
     }
 
 
-    ShootArmourCenterFilter=myFilter(ShootArmourCenter,20,50);
+    ShootArmourCenterFilter=myFilter(ShootArmourCenter,20,5);
     circle(dstImage, Point(ShootArmourCenterFilter.x, ShootArmourCenterFilter.y), 20, (0, 255, 255), 2);
     circle(dstImage, Point(ShootArmourCenter.x, ShootArmourCenter.y), 20, (0, 255, 255), 2);
 
     ShootArmourPitchYawError = CaculatePitchYawError(ShootArmourCenter.x, ShootArmourCenter.y);
     DafuCenterPitchYawError=CaculatePitchYawError(DafuCenter.x, DafuCenter.y);
 
+    if(is_cw)
+    {
     PredcitShootArmourCenter=predcit(27.5,dstImage);
+    }
+    else{
+            PredcitShootArmourCenter=predcit(-27.5,dstImage);
+
+    }
     PredcitShootArmourCenterPitchYawError=CaculatePitchYawError(PredcitShootArmourCenter.x,PredcitShootArmourCenter.y);
 
     float b = 0;

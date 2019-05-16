@@ -28,7 +28,7 @@ public:
     ros::Subscriber cfg_exp_sub;
     ros::Subscriber is_large_sub;
     ros::Subscriber is_rcd_sub;
-    int image_width_, image_height_, framerate_, exposure_=1200, brightness_, contrast_, saturation_, sharpness_, focus_,
+    int image_width_, image_height_, framerate_, exposure_=1500, brightness_, contrast_, saturation_, sharpness_, focus_,
     white_balance_, gain_;
     bool large_resolution_=false,is_record_=false,autofocus_, autoexposure_=false, auto_white_balance_;
     string rcd_path_;
@@ -39,7 +39,7 @@ public:
     {
         image_transport::ImageTransport it(node_);
         cfg_exp_sub=node_.subscribe("/mv_param/exp_time",1,&MVCamNode::get_exp,this);
-//        is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);  //if we want to use small resolution, comment this
+    //    is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);  //if we want to use small resolution, comment this
         is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
         image_pub_ = it.advertise("/MVCamera/image_raw", 1);
 
@@ -83,10 +83,13 @@ public:
     }
     void get_is_large(const std_msgs::BoolConstPtr &is_large_resolution)
     {
-        if(is_large_resolution->data!=large_resolution_)
+        if(is_large_resolution->data!=large_resolution_) //dafu
         {
-            large_resolution_=is_large_resolution->data;
-            mv_driver->SetLargeResolution(large_resolution_);
+            // large_resolution_=is_large_resolution->data;
+            // mv_driver->SetLargeResolution(large_resolution_);
+            mv_driver->SetExposureTime(0, 3000);
+        }else{
+            mv_driver->SetExposureTime(0, 1500);
         }
     }
     void get_is_rcd(const std_msgs::BoolConstPtr &is_rcd)

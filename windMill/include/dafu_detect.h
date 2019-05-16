@@ -31,8 +31,8 @@ float GetPixelLength(Point PixelPointO, Point PixelPointA);
 Mat GetROI(RotatedRect rotate_recte_rect, Mat &grayImage);
 void GetCameraPra();
 Point2f myFilter(Point2f InputPixel,float InterframeError,int FilterLength );
-void DetectDafuArmor(Mat &grayImage, Mat &dstImage);
-Point dafu_ZSZS(Mat &srcImg, bool is_red);
+void DetectDafuArmor(Mat &grayImage, Mat &dstImage,bool is_cw);
+Point dafu_ZSZS(Mat &srcImg, bool is_red,bool is_cw);
 int bgr2binary(Mat &srcImg, bool is_red);
 
 extern Mat dafu_ZS_img;

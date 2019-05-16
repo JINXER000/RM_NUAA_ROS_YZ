@@ -46,6 +46,7 @@ public:
     unsigned char           * g_pRgbBuffer[2];     //处理后数据缓存区
     int                     ready_buffer_id;
     bool                    stopped;
+    bool                     started=0;
     bool                    updated;
     mutex                   mutex1;
     IplImage *iplImage = NULL;

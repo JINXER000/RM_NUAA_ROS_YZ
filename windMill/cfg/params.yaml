@@ -1,5 +1,5 @@
 AlgoriParams:
-    is_enemy_red: True
+    is_enemy_red: False
     ch1_min_r: 14
     ch1_max_r: 240
     ch1_min_b: 190
@@ -75,4 +75,4 @@ is_record: False
 ifshow: False
 if_calc_depth: False
 if_analyze_motion: False
-cam_idx: 1
+cam_idx: 2

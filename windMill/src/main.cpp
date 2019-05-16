@@ -28,7 +28,7 @@ int led_type = 0,  capIdx = 1;
 MarkSensor *markSensor=NULL;
 windMill *wind_mill=NULL;
 serial_common::Guard tgt_pos;
-bool is_windMill_mode=false;//change dafu_zimiao
+bool is_windMill_mode=false,is_cw=true;//change dafu_zimiao
 bool got_img=false;
 
 int frame_process(Mat &bgrImg)
@@ -126,7 +126,7 @@ public:
     void WM_cb(const std_msgs::StringConstPtr &msg)
     {
         unsigned char mode_normal=0x02;
-        unsigned char mode_windMill=0x01;
+        unsigned char mode_windMill_cw=0x01,mode_windMill_ccw=0x03;
         ROS_INFO_STREAM("Read: " << msg->data);
         cout<<"msg->data[0]:"<<msg->data[0]<<endl;
 
@@ -136,11 +136,20 @@ public:
             cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!0"<<endl;
 
         }
-        else if(msg->data[0]==mode_windMill)
+        else if(msg->data[0]==mode_windMill_cw)
         {
-            ROS_WARN("debug: in windmill mode");
+            ROS_WARN("debug: in windmill mode CW");
+            is_cw=1;
             is_windMill_mode=1;
+            
             cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1"<<endl;
+        }else if(msg->data[0]==mode_windMill_ccw)
+        {
+            ROS_WARN("debug: in windmill mode CCW");
+            is_cw=0;
+            is_windMill_mode=1;
+            
+            cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!3"<<endl;
         }
         //modify camera params here
 
@@ -222,7 +231,7 @@ public:
             //      img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
 //            dafu_process(img_src,pix_x,pix_y);
 //            wind_mill->process_windmill_B(img_src,pix_x,pix_y);
-            Point tgtarmor=dafu_ZSZS(img_src,markSensor->ap.is_red);
+            Point tgtarmor=dafu_ZSZS(img_src,markSensor->ap.is_red,is_cw);
             tgt_pos.xlocation=pix_x;
             tgt_pos.ylocation=pix_y;
             img_to_show=img_src;

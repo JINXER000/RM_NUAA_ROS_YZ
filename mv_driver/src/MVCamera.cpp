@@ -5,8 +5,16 @@
 #include <CameraDefine.h>
 #include <zconf.h>
 #include "MVCamera.h"
+#include <ros/ros.h>
 
-
+#include <signal.h>
+ 
+void MySigintHandler(int sig)
+{
+	//这里主要进行退出前的数据保存、内存清理、告知其他节点等工作
+	ROS_INFO("shutting down!");
+	ros::shutdown();
+}
 
 
 MVCamera::MVCamera()
@@ -85,7 +93,7 @@ int MVCamera::Init(int id)
     //初始化缓冲区
     g_pRgbBuffer[0] = (unsigned char*)malloc(tCapability.sResolutionRange.iHeightMax*tCapability.sResolutionRange.iWidthMax*3);
     g_pRgbBuffer[1] = (unsigned char*)malloc(tCapability.sResolutionRange.iHeightMax*tCapability.sResolutionRange.iWidthMax*3);
-
+    started=1;
 }
 
 int MVCamera::Uninit()
@@ -113,6 +121,7 @@ int MVCamera::Uninit()
         free(g_pRgbBuffer[1]);
         g_pRgbBuffer[1] = NULL;
     }
+    started=0;
 }
 
 int MVCamera::SetExposureTime(bool auto_exp, double exp_time)
@@ -310,6 +319,14 @@ int MVCamera::GetFrame_B(Mat &frame,bool is_color)
 
 
             CameraReleaseImageBuffer(hCamera, pbyBuffer);
+        }else{
+            if(started)
+            {
+                // Uninit();
+                // Init();
+                ROS_ERROR("MV CAM DRIVE FIAIL");
+                signal(SIGINT, MySigintHandler);
+            }
         }
     }
 
