@@ -53,7 +53,7 @@ public:
         else
         {
             node_.param("image_height", image_height_, 480);
-            node_.param("framerate", framerate_, 300);
+            node_.param("framerate", framerate_, 200);
 
         }
         node_.getParam("/is_record", is_record_);

@@ -158,7 +158,7 @@ public :
   EnemyStatus enemy_stat;
   deque<float> leaky_list;
 
-  bool center_in_rect=false;
+  int center_in_rect;
 };
 
 class HaarD
