@@ -68,7 +68,7 @@ int bgr2binary(Mat &srcImg, bool is_red)
   {
       mid_chn_img = blue_channel-red_channel;
   }
-  threshold(mid_chn_img, threshold_frame, 25, 255, CV_THRESH_BINARY);
+  threshold(mid_chn_img, threshold_frame, 70, 255, CV_THRESH_BINARY);
 }
 
 Point2f myFilter(Point2f InputPixel,float InterframeError,int FilterLength )
@@ -147,7 +147,7 @@ Point dafu_ZSZS(Mat &srcImg, bool is_red,bool is_cw)
     static Mat kernel_open = getStructuringElement(MORPH_RECT, Size(2, 2), Point(-1, -1));
     morphologyEx(threshold_frame, threshold_frame, MORPH_OPEN, kernel_open);
 
-    imshow("threshold_frame",threshold_frame);
+    // imshow("threshold_frame",threshold_frame);
     DetectDafuArmor(threshold_frame, srcImg,is_cw);
     std::cout<<"dafu tgt is"<<PredcitShootArmourCenter<<std::endl;
     if(IsDetectDafuCenter==0)

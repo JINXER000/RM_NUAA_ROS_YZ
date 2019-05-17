@@ -35,6 +35,6 @@ void DetectDafuArmor(Mat &grayImage, Mat &dstImage,bool is_cw);
 Point dafu_ZSZS(Mat &srcImg, bool is_red,bool is_cw);
 int bgr2binary(Mat &srcImg, bool is_red);
 
-extern Mat dafu_ZS_img;
+extern Mat dafu_ZS_img,threshold_frame; 
 
 #endif

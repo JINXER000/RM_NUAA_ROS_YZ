@@ -1,5 +1,5 @@
 AlgoriParams:
-    is_enemy_red: True
+    is_enemy_red: False
     pitch_bias: 50
     ch1_min_r: 14
     ch1_max_r: 240

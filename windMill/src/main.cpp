@@ -19,7 +19,7 @@
 
 using namespace std;
 using namespace cv;
-Mat img_src,img_to_show,roi_to_show;
+Mat img_src,img_to_show,roi_to_show,binary_to_show;
 int X_bias, Y_bias, pix_x, pix_y;
 int is_find_enemy=0;
 bool isSuccess = 0;
@@ -238,7 +238,7 @@ public:
             tgt_pos.xlocation=pix_x;
             tgt_pos.ylocation=pix_y;
             img_to_show=img_src;
-
+            binary_to_show=threshold_frame;
             if (tgtarmor!=Point(0,0)) {
                 is_find_enemy = 1;
                 tgt_pos.xlocation=tgtarmor.x;
@@ -296,10 +296,11 @@ public:
                          sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img_to_show).toImageMsg();
                          show_img_msg->header.stamp=ros::Time::now();
                          show_image_pub_.publish(show_img_msg);
-
-//                          sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->led_mask).toImageMsg();
-//                          binary_img_msg->header.stamp=ros::Time::now();
-//                          binary_image_pub_.publish(binary_img_msg);
+                        if(binary_to_show.empty())
+                            return ;
+                         sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", binary_to_show).toImageMsg();
+                         binary_img_msg->header.stamp=ros::Time::now();
+                         binary_image_pub_.publish(binary_img_msg);
 
                     //      sensor_msgs::ImagePtr roi_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->ROI_show).toImageMsg();
                     //      roi_img_msg->header.stamp = ros::Time::now();
