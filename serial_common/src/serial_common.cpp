@@ -69,6 +69,7 @@ void write_callback(const serial_common::Guard::ConstPtr& msg)
     Data_disintegrate(msg->depth, &Buffer[7], &Buffer[8]);
     Data_disintegrate(msg->angX, &Buffer[9], &Buffer[10]);
     Data_disintegrate(msg->angY, &Buffer[11], &Buffer[12]);
+    Data_disintegrate(msg->status, &Buffer[13], &Buffer[14]);
     Buffer[DATA_LEN - 1] = Add_CRC(Buffer, DATA_LEN - 1);
 
     ser.write(Buffer,DATA_LEN);   //发送串口数据

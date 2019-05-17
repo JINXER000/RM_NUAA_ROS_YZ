@@ -28,12 +28,12 @@ public:
     ros::Subscriber cfg_exp_sub;
     ros::Subscriber is_large_sub;
     ros::Subscriber is_rcd_sub;
+
     int image_width_, image_height_, framerate_, exposure_=1200, brightness_, contrast_, saturation_, sharpness_, focus_,
-    white_balance_, gain_;
+    white_balance_, gain_,fps_mode=1;
     bool large_resolution_=false,is_record_=false,autofocus_, autoexposure_=false, auto_white_balance_;
     string rcd_path_;
     VideoSaver saver;
-    clock_t begin_time;
     MVCamNode():
         node_("~")
     {
@@ -41,30 +41,35 @@ public:
         cfg_exp_sub=node_.subscribe("/mv_param/exp_time",1,&MVCamNode::get_exp,this);
 //        is_large_sub=node_.subscribe("/mv_param/is_large",1,&MVCamNode::get_is_large,this);  //if we want to use small resolution, comment this
         is_rcd_sub=node_.subscribe("/mv_param/is_record",1,&MVCamNode::get_is_rcd,this);
+
         image_pub_ = it.advertise("/MVCamera/image_raw", 1);
-
-        mv_driver=new MVCamera;
-
-        mv_driver->Init();
-        mv_driver->SetExposureTime(autoexposure_, exposure_);
-        mv_driver->SetLargeResolution(large_resolution_);
-        mv_driver->Play();
 
         node_.param("image_width", image_width_, 640);
         if(large_resolution_)
         {
             node_.param("image_height", image_height_, 512);
-            node_.param("framerate", framerate_, 200);
+            node_.param("framerate", framerate_, 100);
         }
         else
         {
             node_.param("image_height", image_height_, 480);
-            node_.param("framerate", framerate_, 400);
+            node_.param("framerate", framerate_, 300);
 
         }
         node_.getParam("/is_record", is_record_);
         node_.getParam("/rcd_path", rcd_path_);
-        begin_time= clock();
+        node_.getParam("/fps_mode", fps_mode);
+        node_.getParam("/exp_time", exposure_);
+        //init camera param
+        mv_driver=new MVCamera;
+
+        mv_driver->Init();
+        mv_driver->SetExposureTime(autoexposure_, exposure_);
+        mv_driver->SetLargeResolution(large_resolution_);
+        mv_driver->Set_fps(fps_mode);
+        mv_driver->Play();
+
+
     }
     ~MVCamNode()
     {
@@ -113,8 +118,6 @@ public:
             ROS_WARN("NO IMG GOT FROM MV");
             return false;
         }
-        std::cout<<"take image timefly"<<float( clock () - begin_time )/CLOCKS_PER_SEC<<std::endl;
-        begin_time= clock();
         if(is_record_)
         {
             saver.write(rawImg,rcd_path_);

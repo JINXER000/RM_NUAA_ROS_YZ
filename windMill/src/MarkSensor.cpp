@@ -663,6 +663,18 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   pix_y = target.y;
 
 
+  //tell if it is time to shoot
+  Point img_center=Point(0.5*img.cols,0.5*img.rows);
+  if(img_center.y>marker.kpts[0].y&&img_center.y<marker.kpts[2].y&&
+     img_center.x>marker.LEDs[0].center.x&&img_center.x<marker.LEDs[1].center.x)
+  {
+    center_in_rect=1;
+    ROS_WARN("shoot the target!");
+  }else
+  {
+    center_in_rect=0;
+  }
+
   ///update 3d position
 
 

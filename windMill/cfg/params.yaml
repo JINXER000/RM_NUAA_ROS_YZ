@@ -71,8 +71,12 @@ MarkerParams:
     marker_size_min:  10    #  c2c distance
     marker_size_max:  200
 
-is_record: False
-ifshow: False
+
 if_calc_depth: False
 if_analyze_motion: False
+
+is_record: False
+ifshow: False
 cam_idx: 1
+fps_mode: 0
+exp_time: 1500

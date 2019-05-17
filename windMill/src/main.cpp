@@ -47,6 +47,8 @@ int frame_process(Mat &bgrImg)
         tgt_pos.depth=Z;
         tgt_pos.angX=angX*100;
         tgt_pos.angY=angY*100;
+        tgt_pos.status=markSensor->center_in_rect;
+
 
         std::cout<<"target pix::  "<<pix_x<<","<<pix_y<<std::endl;
     }else
