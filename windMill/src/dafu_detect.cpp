@@ -425,7 +425,7 @@ void DetectDafuArmor(Mat &grayImage, Mat &dstImage,bool is_cw)
     {
     PredcitShootArmourCenter=predcit(27.5,dstImage);
     }
-    else{
+    else {
             PredcitShootArmourCenter=predcit(-27.5,dstImage);
 
     }

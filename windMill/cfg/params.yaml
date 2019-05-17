@@ -1,5 +1,6 @@
 AlgoriParams:
-    is_enemy_red: False
+    is_enemy_red: True
+    pitch_bias: 50
     ch1_min_r: 14
     ch1_max_r: 240
     ch1_min_b: 190
@@ -71,8 +72,12 @@ MarkerParams:
     marker_size_min:  10    #  c2c distance
     marker_size_max:  200
 
-is_record: False
-ifshow: False
+
 if_calc_depth: False
 if_analyze_motion: False
-cam_idx: 2
+
+is_record: False
+ifshow: True
+cam_idx: 1
+fps_mode: 0
+exp_time: 1500

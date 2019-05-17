@@ -18,6 +18,7 @@ class AlgoriParam
   bool is_red;
   int  ch1_min,ch1_max,ch2_min,ch2_max,ch3_min,ch3_max;
   string dbg_path;
+  int pitch_bias;
   AlgoriParam();
   AlgoriParam(bool is_red_,
               int  ch1_min_,

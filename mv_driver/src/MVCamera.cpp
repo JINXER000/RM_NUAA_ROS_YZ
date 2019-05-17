@@ -1,6 +1,3 @@
-//
-// Created by liming on 5/31/18.
-//
 
 #include <CameraDefine.h>
 #include <zconf.h>
@@ -290,6 +287,20 @@ int MVCamera::Read()
         }
     }
 }
+int MVCamera::Set_fps(int fps_mode)
+{
+  int status=CameraSetFrameSpeed(hCamera,fps_mode);
+  if(status==CAMERA_STATUS_SUCCESS)
+  {
+  printf("CAMERA SET FPS MODE SUCCESS! current mode is %d \n" ,fps_mode);
+  }else
+  {
+    printf("CAMERA SET FPS MODE FAILED! ERROR CODE: %d\n", status);
+    return -1;
+  }
+  CameraGetCapability(hCamera,&tCapability);
+}
+
 int MVCamera::GetFrame_B(Mat &frame,bool is_color)
 {
     if (!stopped) {

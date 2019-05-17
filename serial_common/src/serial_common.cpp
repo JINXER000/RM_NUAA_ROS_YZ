@@ -20,7 +20,7 @@
 #ifdef GUARD_MODE
 #include <serial_common/Guard.h>
 #endif
-#define DATA_LEN 14
+#define DATA_LEN 16
 serial::Serial ser; //声明串口对象
 serial_common::gimbal receive_msg;
 
@@ -69,6 +69,7 @@ void write_callback(const serial_common::Guard::ConstPtr& msg)
     Data_disintegrate(msg->depth, &Buffer[7], &Buffer[8]);
     Data_disintegrate(msg->angX, &Buffer[9], &Buffer[10]);
     Data_disintegrate(msg->angY, &Buffer[11], &Buffer[12]);
+    Data_disintegrate(msg->status, &Buffer[13], &Buffer[14]);
     Buffer[DATA_LEN - 1] = Add_CRC(Buffer, DATA_LEN - 1);
 
     ser.write(Buffer,DATA_LEN);   //发送串口数据

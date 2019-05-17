@@ -47,6 +47,8 @@ int frame_process(Mat &bgrImg)
         tgt_pos.depth=Z;
         tgt_pos.angX=angX*100;
         tgt_pos.angY=angY*100;
+        tgt_pos.status=markSensor->center_in_rect;
+
 
         std::cout<<"target pix::  "<<pix_x<<","<<pix_y<<std::endl;
     }else
@@ -59,6 +61,7 @@ int frame_process(Mat &bgrImg)
         tgt_pos.depth=30000;
         tgt_pos.angX=30000;
         tgt_pos.angY=30000;
+        tgt_pos.status=0;
 
     }
 
@@ -243,6 +246,7 @@ public:
                 tgt_pos.depth=0;
                 tgt_pos.angX=0;
                 tgt_pos.angY=0;
+                
 
                 std::cout<<"target pix::  "<<pix_x<<","<<pix_y<<std::endl;
             }else
@@ -270,28 +274,28 @@ public:
         serial_pub.publish(tgt_pos);
 
         // Update GUI Window
-        if(ifshow)
-        {
-            cv::imshow("detection result", img_to_show);
-//            if(!roi_to_show.empty())
-//                cv::imshow("track window", roi_to_show);
-            //    if(!markSensor.img_out.empty())
-            //      cv::imshow("feed to number", markSensor.img_out);
-            char key=cv::waitKey(1);
-            if(key=='q' ||key=='Q')
-            {
-                //send SIGINT
-                system("pkill roslaunch");
-            }
+//         if(ifshow)
+//         {
+//             cv::imshow("detection result", img_to_show);
+// //            if(!roi_to_show.empty())
+// //                cv::imshow("track window", roi_to_show);
+//             //    if(!markSensor.img_out.empty())
+//             //      cv::imshow("feed to number", markSensor.img_out);
+//             char key=cv::waitKey(1);
+//             if(key=='q' ||key=='Q')
+//             {
+//                 //send SIGINT
+//                 system("pkill roslaunch");
+//             }
 
-        }
+//         }
                 // Output modified video stream
 
                 if(ifshow)
                 {
-//                          sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", markSensor->img_show).toImageMsg();
-//                          show_img_msg->header.stamp=ros::Time::now();
-//                          show_image_pub_.publish(show_img_msg);
+                         sensor_msgs::ImagePtr show_img_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img_to_show).toImageMsg();
+                         show_img_msg->header.stamp=ros::Time::now();
+                         show_image_pub_.publish(show_img_msg);
 
 //                          sensor_msgs::ImagePtr binary_img_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", markSensor->led_mask).toImageMsg();
 //                          binary_img_msg->header.stamp=ros::Time::now();

@@ -71,6 +71,7 @@
  AlgoriParam::AlgoriParam()
  {
    nh_.getParam("/AlgoriParams/is_enemy_red",is_red);
+   nh_.getParam("/AlgoriParams/pitch_bias",pitch_bias);
    if(is_red)
    {
      nh_.getParam("/AlgoriParams/ch1_min_r",ch1_min);
