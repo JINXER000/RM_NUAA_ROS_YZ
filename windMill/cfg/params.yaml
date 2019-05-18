@@ -1,6 +1,6 @@
 AlgoriParams:
     is_enemy_red: False
-    pitch_bias: 50
+    pitch_bias: 25
     ch1_min_r: 14
     ch1_max_r: 240
     ch1_min_b: 190
@@ -64,7 +64,8 @@ MarkerParams:
     LED_ratio_max:  20
     LED_widtch1_min:  7        # width in pixel
     LED_widtch1_max:  100
-    marker_parallel_angle:  6     # angle between 2 led
+    LED_diff: 0.2
+    marker_parallel_angle:  5     # angle between 2 led
     marker_vertical_angle:  10     # no use
     marker_direction_angle:  40    # angle between c2c and horizon
     marker_ratio_min:  0.8    #  width / height

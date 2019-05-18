@@ -58,7 +58,7 @@ public:
     ros::NodeHandle nh_;
      int   contours_lengtch1_min, contours_lengtch1_max;
      float LED_ratio_min, LED_ratio_max;
-     float LED_widtch1_min, LED_widtch1_max;
+     float LED_widtch1_min, LED_widtch1_max,LED_diff;
      float marker_parallel_angle;
      float marker_vertical_angle;
      float marker_direction_angle;

@@ -90,6 +90,7 @@ MarkSensor::MarkSensor(AlgoriParam &ap_,CamParams &cp_,MarkerParams &mp_):
 {
   cameraMatrix = (cv::Mat_<double>(3,3) << cp.fx, 0, cp.cx, 0, cp.fy, cp.cy, 0, 0, 1);
   distCoeffs = (Mat_<double>(1,4) <<cp.distcoef1, cp.distcoef2, 0, 0);
+  jump_filter=new FilterOutStep;
 
 }
 int MarkSensor::bgr2binary(Mat &srcImg, Mat &img_out,int method)
@@ -318,7 +319,7 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
       float max_width = max(LEDs[i].width, LEDs[j].width);
       float led_diff = fabs(LEDs[i].width - LEDs[j].width) / max_width;
 
-      if (led_diff > 0.3) {
+      if (led_diff > mp.LED_diff) {
         //printf("LED difference not satisfied !\n");  491,408,514,510// 56,170 ,91,175
         continue;
       }
@@ -467,7 +468,7 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   if (mp.ifShow)
   {
     //    img_out=img_show(res_marker.bbox);
-    rectangle(img_show, res_marker.bbox, Scalar(0, 255, 0), 2);
+    rectangle(img_show, res_marker.bbox, Scalar(0, 255, 0), 1);
   }
 
   return 0;
@@ -589,7 +590,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
       printf("Track No target!\n");
       track_fail_cnt[0]=0;
       //      marker=Marker();
-      return -1;
+//      return -1;
     }
   }else if(status==STATUS_TRACKLOST0)
   {
@@ -610,7 +611,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
         track_fail_cnt[1]=0;
       }
       //      marker=Marker();
-      return -1;
+      //return -1;
     }
 
   }else if(status==STATUS_TRACKLOST1)
@@ -623,15 +624,15 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
     else {
       printf("Track 1 No target!\n");
       track_fail_cnt[1]++;
-      if(track_fail_cnt[1]>10)
+      if(track_fail_cnt[1]>20)
       {
         status=STATUS_TRACKLOST2;
         printf("ROI enlarge again!");
-        track_fail_cnt[1]=10;
+        track_fail_cnt[1]=0;
         track_fail_cnt[2]=0;
       }
       //    marker=Marker();
-      return -1;
+      //return -1;
     }
 
   }else if(status==STATUS_TRACKLOST2)
@@ -658,15 +659,37 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   }
 
   ///update pix position
-  target = (marker.LEDs[0].center + marker.LEDs[1].center)*0.5f;
+  if(status==STATUS_TRACKING)
+  {
+    new_target = (marker.LEDs[0].center + marker.LEDs[1].center)*0.5f;
+//    target=jump_filter->Filter(new_target,marker.bbox.width,10);
+    target=new_target;
+  }else
+  {
+    new_target =Point(30000,30000);
+    target=jump_filter->Filter(new_target,10000,20);
+  }
+
+  //filter
+
+
+
+
   pix_x = target.x;
   pix_y = target.y;
 
-
+  if(pix_x==30000&&pix_y==30000)
+  {
+    return -1;
+  }
+  if(mp.ifShow)
+  {
+    circle(img_show,target,4,Scalar(20,20,255),3);
+  }
   //tell if it is time to shoot
   Point img_center=Point(0.5*img.cols,0.5*img.rows+ap.pitch_bias);
-  if(img_center.y>marker.kpts[0].y&&img_center.y<marker.kpts[2].y&&
-     img_center.x>marker.LEDs[0].center.x&&img_center.x<marker.LEDs[1].center.x)
+  if(img_center.y>(marker.kpts[0].y-marker.bbox.height)&&img_center.y<(marker.kpts[2].y+marker.bbox.height)&&
+     img_center.x>(marker.LEDs[0].center.x-0.6*marker.bbox.width)&&img_center.x<(marker.LEDs[1].center.x+0.6*marker.bbox.width))
   {
     center_in_rect=2;
     ROS_WARN("shoot the target!");

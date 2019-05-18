@@ -68,7 +68,7 @@ int bgr2binary(Mat &srcImg, bool is_red)
   {
       mid_chn_img = blue_channel-red_channel;
   }
-  threshold(mid_chn_img, threshold_frame, 70, 255, CV_THRESH_BINARY);
+  threshold(mid_chn_img, threshold_frame, 60, 255, CV_THRESH_BINARY);
 }
 
 Point2f myFilter(Point2f InputPixel,float InterframeError,int FilterLength )

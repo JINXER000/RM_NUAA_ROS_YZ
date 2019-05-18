@@ -138,6 +138,8 @@ public :
   AlgoriParam ap;
   CamParams cp;
   MarkerParams mp;
+  FilterOutStep *jump_filter;
+
   Mat cameraMatrix;
   Mat distCoeffs ;
 
@@ -145,7 +147,7 @@ public :
   Marker marker;
 	Mat img_gray, img_bgr, img_hsv, img_h, led_mask,img_out;
   static Mat img_show,ROI_bgr;
-	Point2f old_target, target;
+  Point2f new_target, target;
 
 
   int track_fail_cnt[3];
@@ -160,6 +162,7 @@ public :
 
   int center_in_rect;
 };
+
 
 class HaarD
 {

@@ -234,7 +234,7 @@ public:
             //      img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
 //            dafu_process(img_src,pix_x,pix_y);
 //            wind_mill->process_windmill_B(img_src,pix_x,pix_y);
-            Point tgtarmor=dafu_ZSZS(img_src,markSensor->ap.is_red,is_cw);
+            Point tgtarmor=dafu_ZSZS(img_src,!markSensor->ap.is_red,is_cw);
             tgt_pos.xlocation=pix_x;
             tgt_pos.ylocation=pix_y;
             img_to_show=img_src;

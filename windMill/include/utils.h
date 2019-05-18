@@ -33,5 +33,61 @@ __inline__ void limitRect(Rect &location, Size sz)
   Rect window(Point(0, 0), sz);
   location = location & window;
 }
+class FilterOutStep
+{
+public:
+    Point2f Filter(Point2f InputPixel,float InterframeError,int FilterLength )
+    {
+      LastInputPixel=CurrentInputPixel;
+      CurrentInputPixel=InputPixel;
 
+
+      float PixelLength=GetPixelLength(PixelRecord,CurrentInputPixel);
+
+      if( PixelLength > InterframeError)
+      {
+          if(jump_cnt==0)
+          {
+              PixelRecord=LastInputPixel;
+          }
+
+
+          jump_cnt++;
+          if(jump_cnt>=FilterLength)
+          {
+              jump_cnt=0;
+              return CurrentInputPixel;
+          }
+          else
+          {
+             return PixelRecord;
+          }
+      }
+      else
+      {
+         jump_cnt=0;
+         PixelRecord=CurrentInputPixel;
+        return CurrentInputPixel;
+
+      }
+
+
+    }
+    //FilterOutStep();
+    float GetPixelLength(Point PixelPointO, Point PixelPointA)
+    {
+        float PixelLength;
+        PixelLength = powf((PixelPointO.x - PixelPointA.x), 2) + powf((PixelPointO.y - PixelPointA.y), 2);
+        PixelLength = sqrtf(PixelLength);
+        return PixelLength;
+    }
+private:
+
+    Point2f PixelRecord=Point2f(320,200);
+    Point2f LastInputPixel=Point2f(320,200);
+    Point2f CurrentInputPixel=Point2f(320,200);
+    int jump_cnt=0; //
+
+
+};
 #endif // UTILS_H
