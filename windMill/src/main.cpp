@@ -27,8 +27,9 @@ float angX = 0, angY = 0, Z = 0;
 int led_type = 0,  capIdx = 1;
 MarkSensor *markSensor=NULL;
 windMill *wind_mill=NULL;
+Dafu_Detecor *dafu_detector=NULL;
 serial_common::Guard tgt_pos;
-bool is_windMill_mode=false,is_cw=true;//change dafu_zimiao
+bool is_windMill_mode=true,is_cw=true;//change dafu_zimiao
 bool got_img=false;
 
 int frame_process(Mat &bgrImg)
@@ -104,7 +105,8 @@ public:
         CamParams cp(cam_idx,!is_windMill_mode);
         MarkerParams mp(ifshow);
         markSensor=new MarkSensor(ap,cp,mp);
-        wind_mill=new windMill;
+//        wind_mill=new windMill;
+        dafu_detector=new Dafu_Detecor(ap,cp);
         // Subscrive to input video feed and publish output video feed
 
         image_sub_ = it_.subscribe("/MVCamera/image_raw", 1,
@@ -234,11 +236,11 @@ public:
             //      img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
 //            dafu_process(img_src,pix_x,pix_y);
 //            wind_mill->process_windmill_B(img_src,pix_x,pix_y);
-            Point tgtarmor=dafu_ZSZS(img_src,!markSensor->ap.is_red,is_cw);
+            Point tgtarmor=dafu_detector->dafu_ZSZS(img_src,!markSensor->ap.is_red,is_cw);
             tgt_pos.xlocation=pix_x;
             tgt_pos.ylocation=pix_y;
             img_to_show=img_src;
-            binary_to_show=threshold_frame;
+            binary_to_show=dafu_detector->threshold_frame;
             if (tgtarmor!=Point(0,0)) {
                 is_find_enemy = 1;
                 tgt_pos.xlocation=tgtarmor.x;

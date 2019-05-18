@@ -13,6 +13,7 @@
 
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/highgui/highgui.hpp"
+#include "MarkerParams.h"
 
 
 
@@ -22,8 +23,9 @@ using namespace cv;
 class Dafu_Detecor
 {
 public:
+  Dafu_Detecor(AlgoriParam &_ap,CamParams &_cp );
   //计算云台需要转的Yaw和Pitch使得摄像头的中轴线到指定点
-  Point2f CaculatePitchYawError(float Pixel_x, float Pixel_y);
+
   double CvtRealLenghth2PixelLenghth(double RealLenghth_mm, double Distance_mm);
   double CvtPixelLenghth2RealLenghth(double PixelLenghth, double Distance_mm);
   void DrawEnclosingRexts(Mat &grayImage, Mat &dstImage);
@@ -36,6 +38,10 @@ public:
   void DetectDafuArmor(Mat &grayImage, Mat &dstImage,bool is_cw);
   Point dafu_ZSZS(Mat &srcImg, bool is_red,bool is_cw);
   int bgr2binary(Mat &srcImg, bool is_red);
+  Point2f  predcit(float angle_degree,Mat frame); //calculate  predcit
+  float  CalculateBallisticDrop(float HorizontalDistance, float PitchDegree,float  BulletVelocity,float CorrectionFactor);
+  void CalculateShootingPitch(Point2f CurrentPixel, Point2f &TargetPixel,float PitchDegree,float HorizontalDistance);
+
 
   Mat dafu_ZS_img,threshold_frame;
   //识别对象的一些参数
@@ -57,11 +63,13 @@ public:
 
 
   //摄像头的一些参数
-//  float Camera_fx 6.530675507960873e+02
-//  float Camera_fy 6.521106670863784e+02
-//  float Camera_fxy 6.525106670863784e+02
-//  float Camera_frame_width 640
-//  float Camera_frame_height 480
+  float Camera_fx;
+  float Camera_fy ;
+  float Camera_fxy;
+  float Camera_frame_width;
+  float Camera_frame_height ;
+
+  float gray_threthold;
 
   float Camera_vertical_halfangle = 20.0 ;  //1/2垂直方向视角 单位度
   float Camera_lateral_halfangle = 20.0;   //1/2水平方向视角 单位度
@@ -76,22 +84,32 @@ public:
 
 
   int IsDetectDafuCenter = 0;
+
+  Point2f PredcitShootArmourCenter;
+  Point2f ShootArmourCenter;        //    需要打击的装甲板的中心坐标
+  Point2f ShootArmourCenterFilter;  //ShootArmourCenter
+  Point2f DafuCenter;               //大符中心坐标
+
+
+
+  AlgoriParam ap;
+  CamParams cp;
 };
-//计算云台需要转的Yaw和Pitch使得摄像头的中轴线到指定点
-Point2f CaculatePitchYawError(float Pixel_x, float Pixel_y);
-double CvtRealLenghth2PixelLenghth(double RealLenghth_mm, double Distance_mm);
-double CvtPixelLenghth2RealLenghth(double PixelLenghth, double Distance_mm);
-void DrawEnclosingRexts(Mat &grayImage, Mat &dstImage);
-Point2f CaculatePitchYawError(float Pixel_x, float Pixel_y); //通过像素坐标就算云台需要转过的角度
-float GetPixelLength(Point PixelPointO, Point PixelPointA);
+////计算云台需要转的Yaw和Pitch使得摄像头的中轴线到指定点
+//Point2f CaculatePitchYawError(float Pixel_x, float Pixel_y);
+//double CvtRealLenghth2PixelLenghth(double RealLenghth_mm, double Distance_mm);
+//double CvtPixelLenghth2RealLenghth(double PixelLenghth, double Distance_mm);
+//void DrawEnclosingRexts(Mat &grayImage, Mat &dstImage);
+//Point2f CaculatePitchYawError(float Pixel_x, float Pixel_y); //通过像素坐标就算云台需要转过的角度
+//float GetPixelLength(Point PixelPointO, Point PixelPointA);
 
-Mat GetROI(RotatedRect rotate_recte_rect, Mat &grayImage);
-void GetCameraPra();
-Point2f myFilter(Point2f InputPixel,float InterframeError,int FilterLength );
-void DetectDafuArmor(Mat &grayImage, Mat &dstImage,bool is_cw);
-Point dafu_ZSZS(Mat &srcImg, bool is_red,bool is_cw);
-int bgr2binary(Mat &srcImg, bool is_red);
+//Mat GetROI(RotatedRect rotate_recte_rect, Mat &grayImage);
+//void GetCameraPra();
+//Point2f myFilter(Point2f InputPixel,float InterframeError,int FilterLength );
+//void DetectDafuArmor(Mat &grayImage, Mat &dstImage,bool is_cw);
+//Point dafu_ZSZS(Mat &srcImg, bool is_red,bool is_cw);
+//int bgr2binary(Mat &srcImg, bool is_red);
 
-extern Mat dafu_ZS_img,threshold_frame; 
+//extern Mat dafu_ZS_img,threshold_frame;
 
 #endif

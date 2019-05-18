@@ -1,6 +1,7 @@
 AlgoriParams:
     is_enemy_red: False
     pitch_bias: 25
+    gray_threthold: 70
     ch1_min_r: 14
     ch1_max_r: 240
     ch1_min_b: 190

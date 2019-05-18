@@ -17,6 +17,7 @@ class AlgoriParam
   ros::NodeHandle nh_;
   bool is_red;
   int  ch1_min,ch1_max,ch2_min,ch2_max,ch3_min,ch3_max;
+  int gray_threthold;
   string dbg_path;
   int pitch_bias;
   AlgoriParam();
