@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     nh.getParam("/video_source",video_source);
     nh.getParam("/dbg_img_path",dbg_img_path);
     nh.getParam("/is_video_dbg",is_video_dbg);
-    ros::Rate loop_rate(60);
+    ros::Rate loop_rate(20);
     //  string path = "/home/yzchen/catkin_ws/videos/windMill.mp4";
     cuda_proc processor(1024,1280);
     VideoCapture cap(video_source);//open video from the path

@@ -81,6 +81,12 @@ public:
         PixelLength = sqrtf(PixelLength);
         return PixelLength;
     }
+    void setInitPix(Point2f new_pix)
+    {
+       PixelRecord=new_pix;
+       LastInputPixel=new_pix;
+       CurrentInputPixel=new_pix;
+    }
 private:
 
     Point2f PixelRecord=Point2f(320,200);

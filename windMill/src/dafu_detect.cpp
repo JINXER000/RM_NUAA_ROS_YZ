@@ -213,8 +213,8 @@ void Dafu_Detecor::DetectDafuArmor(Mat &grayImage, Mat &dstImage,bool is_cw)
       //cout<<"detect_dafu_armour_pixel_width"<<detect_dafu_armour_pixel_width<<endl;
       //cout<<"detect_dafu_armour_pixel_height"<<detect_dafu_armour_pixel_height<<endl;
 
-      real_dafu_armour_pixel_width = 20; //摄像头标定后修改、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、
-      real_dafu_armour_pixel_height = 15;//摄像头标定后修改、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、
+      real_dafu_armour_pixel_width = 26; //摄像头标定后修改、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、
+      real_dafu_armour_pixel_height = 14;//摄像头标定后修改、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、、
 
 
       if (detect_dafu_armour_pixel_height < real_dafu_armour_pixel_height*(1 + max_dafu_transformation)

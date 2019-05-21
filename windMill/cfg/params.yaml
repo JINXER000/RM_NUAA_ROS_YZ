@@ -1,6 +1,6 @@
 AlgoriParams:
     is_enemy_red: False
-    pitch_bias: 25
+    pitch_bias: 30   #  zkx: 50 , wxc: 25
     gray_threthold: 70
     ch1_min_r: 14
     ch1_max_r: 240
@@ -79,7 +79,7 @@ if_calc_depth: False
 if_analyze_motion: False
 
 is_record: False
-ifshow: True
-cam_idx: 1
+ifshow: False
+cam_idx: 2
 fps_mode: 0
-exp_time: 1500
+exp_time: 2000

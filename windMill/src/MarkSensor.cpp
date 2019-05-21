@@ -663,6 +663,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   {
     new_target = (marker.LEDs[0].center + marker.LEDs[1].center)*0.5f;
 //    target=jump_filter->Filter(new_target,marker.bbox.width,10);
+    jump_filter->setInitPix(new_target);
     target=new_target;
   }else
   {
@@ -689,7 +690,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   //tell if it is time to shoot
   Point img_center=Point(0.5*img.cols,0.5*img.rows+ap.pitch_bias);
   if(img_center.y>(marker.kpts[0].y-marker.bbox.height)&&img_center.y<(marker.kpts[2].y+marker.bbox.height)&&
-     img_center.x>(marker.LEDs[0].center.x-0.6*marker.bbox.width)&&img_center.x<(marker.LEDs[1].center.x+0.6*marker.bbox.width))
+     img_center.x>(marker.LEDs[0].center.x-0.1*marker.bbox.width)&&img_center.x<(marker.LEDs[1].center.x+0.1*marker.bbox.width))
   {
     center_in_rect=2;
     ROS_WARN("shoot the target!");

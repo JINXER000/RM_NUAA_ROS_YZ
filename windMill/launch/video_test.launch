@@ -1,7 +1,7 @@
 <launch>
-<!--<param name="video_source" value="$(find windMill)/../../../../samples/2red.avi"/>-->
+<!--<param name="video_source" value="$(find windMill)/../../../../video_rcd/Video_2019-5-19_7-47-22.avi"/>-->
 
-<param name="video_source" value="$(find windMill)/../../../../samples/windmill/big4.avi"/>
+<param name="video_source" value="$(find windMill)/../../../../samples/armor/Video_2019-5-16_14-3-8.avi"/>
 <param name="dbg_img_path" value="$(find windMill)/../../../../dbg_img/"/>
 <param name="is_video_dbg" value="1"/>
     <node pkg="windMill" type="windMill_node" name="windMill" output="screen" >

@@ -140,7 +140,7 @@ int main (int argc, char** argv)
     }
 
 
-    ros::Rate loop_rate(250);
+    ros::Rate loop_rate(260);
     while(ros::ok())
     {
         if(ser.available()){

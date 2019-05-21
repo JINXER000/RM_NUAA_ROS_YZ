@@ -29,16 +29,23 @@ MarkSensor *markSensor=NULL;
 windMill *wind_mill=NULL;
 Dafu_Detecor *dafu_detector=NULL;
 serial_common::Guard tgt_pos;
-bool is_windMill_mode=true,is_cw=true;//change dafu_zimiao
+bool is_windMill_mode=false,is_cw=false;//change dafu_zimiao
+bool is_redetect=false;
 bool got_img=false;
 
 int frame_process(Mat &bgrImg)
 {
 
-
+        if(is_redetect)
+        {
+            markSensor->status=MarkSensor::STATUS_DETECTING;
+            is_redetect=false;
+//            ROS_ERROR("REDETECT!!");
+        }
 
     isSuccess = markSensor->ProcessFrameLEDXYZ(bgrImg, angX, angY, Z, led_type,
                                                pix_x, pix_y);
+
     if (!isSuccess) {
         is_find_enemy = 1;
         X_bias = pix_x - bgrImg.cols/2;
@@ -102,7 +109,7 @@ public:
         nh_.getParam("/ifshow",ifshow);
         nh_.getParam("/cam_idx",cam_idx);
         AlgoriParam ap;
-        CamParams cp(cam_idx,!is_windMill_mode);
+        CamParams cp(cam_idx,false);
         MarkerParams mp(ifshow);
         markSensor=new MarkSensor(ap,cp,mp);
 //        wind_mill=new windMill;
@@ -134,23 +141,23 @@ public:
         unsigned char mode_windMill_cw=0x01,mode_windMill_ccw=0x03;
         ROS_INFO_STREAM("Read: " << msg->data);
         cout<<"msg->data[0]:"<<msg->data[0]<<endl;
-
+         ROS_WARN("debug: in windmill mode change!!");
         if(msg->data[0]==mode_normal)
         {
             is_windMill_mode=0;
             cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!0"<<endl;
+            is_redetect=true;
 
         }
         else if(msg->data[0]==mode_windMill_cw)
         {
-            ROS_WARN("debug: in windmill mode CW");
+           
             is_cw=1;
             is_windMill_mode=1;
             
             cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1"<<endl;
         }else if(msg->data[0]==mode_windMill_ccw)
         {
-            ROS_WARN("debug: in windmill mode CCW");
             is_cw=0;
             is_windMill_mode=1;
             
@@ -158,7 +165,7 @@ public:
         }
         //modify camera params here
 
-        markSensor->cp=CamParams(cam_idx,!is_windMill_mode);
+        markSensor->cp=CamParams(cam_idx,false);
 
         //get translation
 
