@@ -140,12 +140,9 @@ public:
         unsigned char mode_normal=0x02;
         unsigned char mode_windMill_cw=0x01,mode_windMill_ccw=0x03;
         ROS_INFO_STREAM("Read: " << msg->data);
-        cout<<"msg->data[0]:"<<msg->data[0]<<endl;
-         ROS_WARN("debug: in windmill mode change!!");
         if(msg->data[0]==mode_normal)
         {
             is_windMill_mode=0;
-            cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!0"<<endl;
             is_redetect=true;
 
         }
@@ -154,14 +151,14 @@ public:
            
             is_cw=1;
             is_windMill_mode=1;
+            ROS_WARN("debug: windmill C W!");
+
             
-            cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1"<<endl;
         }else if(msg->data[0]==mode_windMill_ccw)
         {
             is_cw=0;
             is_windMill_mode=1;
-            
-            cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!3"<<endl;
+            ROS_WARN("-----CCW windmill ---------");
         }
         //modify camera params here
 

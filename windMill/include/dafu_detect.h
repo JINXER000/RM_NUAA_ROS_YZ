@@ -37,10 +37,11 @@ public:
   Point2f myFilter(Point2f InputPixel,float InterframeError,int FilterLength );
   void DetectDafuArmor(Mat &grayImage, Mat &dstImage,bool is_cw);
   Point dafu_ZSZS(Mat &srcImg, bool is_red,bool is_cw);
-  int bgr2binary(Mat &srcImg, bool is_red);
+  int bgr2binary(Mat &srcImg, Mat &img_out,int method);
   Point2f  predcit(float angle_degree,Mat frame); //calculate  predcit
   float  CalculateBallisticDrop(float HorizontalDistance, float PitchDegree,float  BulletVelocity,float CorrectionFactor);
   void CalculateShootingPitch(Point2f CurrentPixel, Point2f &TargetPixel,float PitchDegree,float HorizontalDistance);
+  Point2f PointRotate(float angle_degree, Mat frame,Point2f Rotatecenter,Point2f RotatePoint);
 
 
   Mat dafu_ZS_img,threshold_frame;
