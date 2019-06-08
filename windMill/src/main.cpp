@@ -112,7 +112,7 @@ public:
         CamParams cp(cam_idx,false);
         MarkerParams mp(ifshow);
         markSensor=new MarkSensor(ap,cp,mp);
-//        wind_mill=new windMill;
+        wind_mill=new windMill(!ap.is_red,is_cw);
         dafu_detector=new Dafu_Detecor(ap,cp);
         // Subscrive to input video feed and publish output video feed
 
@@ -238,16 +238,19 @@ public:
     }
     void process_frame()
     {
-        if(is_windMill_mode)   // strike wind mill
+        if(is_windMill_mode)
         {
-            //      img_src.copyTo(markSensor->img_show);  // replace me with dafu algorithm
-//            dafu_process(img_src,pix_x,pix_y);
-//            wind_mill->process_windmill_B(img_src,pix_x,pix_y);
-            Point tgtarmor=dafu_detector->dafu_ZSZS(img_src,!markSensor->ap.is_red,is_cw);
-            tgt_pos.xlocation=pix_x;
-            tgt_pos.ylocation=pix_y;
+            Point tgtarmor;
+
+            // using algorithm by yizhou
+//            wind_mill->process_windmill_B(img_src,tgtarmor.x,tgtarmor.y);
+//            img_to_show=wind_mill->img_show;
+//            binary_to_show=wind_mill->img_binary_link;
+            // using algorithm by zhangsheng
+             tgtarmor=dafu_detector->dafu_ZSZS(img_src,!markSensor->ap.is_red,is_cw);
             img_to_show=img_src;
             binary_to_show=dafu_detector->threshold_frame;
+
             if (tgtarmor!=Point(0,0)) {
                 is_find_enemy = 1;
                 tgt_pos.xlocation=tgtarmor.x;
@@ -257,7 +260,7 @@ public:
                 tgt_pos.angY=0;
                 
 
-                std::cout<<"target pix::  "<<pix_x<<","<<pix_y<<std::endl;
+                std::cout<<"target pix::  "<<tgtarmor.x<<","<<tgtarmor.y<<std::endl;
             }else
             {
                 is_find_enemy=0;
@@ -278,8 +281,10 @@ public:
             img_to_show=markSensor->img_show;
             roi_to_show=markSensor->ROI_bgr;
         }
-        is_large_msg.data=!is_windMill_mode;  //if wm mode, then small resolution
-        is_large_pub.publish(is_large_msg);  //resolution of next frame will be ok...
+        ///Originally we plan to use small resolution in detect mode and large resolution in windmill
+        ///mode. However, now we use small in both mode.
+//        is_large_msg.data=!is_windMill_mode;  //if wm mode, then small resolution
+//        is_large_pub.publish(is_large_msg);  //resolution of next frame will be ok...
         serial_pub.publish(tgt_pos);
 
         // Update GUI Window

@@ -688,9 +688,17 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
     circle(img_show,target,4,Scalar(20,20,255),3);
   }
   //tell if it is time to shoot
+  float extend_yaw;
+  if(marker.armor_type==Marker::BIG)
+  {
+      extend_yaw=0.6;
+  }else
+  {
+      extend_yaw=1.2;
+  }
   Point img_center=Point(0.5*img.cols,0.5*img.rows+ap.pitch_bias);
   if(img_center.y>(marker.kpts[0].y-marker.bbox.height)&&img_center.y<(marker.kpts[2].y+marker.bbox.height)&&
-     img_center.x>(marker.LEDs[0].center.x-0.1*marker.bbox.width)&&img_center.x<(marker.LEDs[1].center.x+0.1*marker.bbox.width))
+     img_center.x>(marker.LEDs[0].center.x-extend_yaw*marker.bbox.width)&&img_center.x<(marker.LEDs[1].center.x+extend_yaw*marker.bbox.width))
   {
     center_in_rect=2;
     ROS_WARN("shoot the target!");

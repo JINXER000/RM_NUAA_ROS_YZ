@@ -72,14 +72,14 @@ MarkerParams:
     marker_ratio_min:  0.8    #  width / height
     marker_ratio_max:  7
     marker_size_min:  10    #  c2c distance
-    marker_size_max:  200
+    marker_size_max:  220
 
 
 if_calc_depth: False
 if_analyze_motion: False
 
 is_record: False
-ifshow: False
+ifshow: True
 cam_idx: 2
 fps_mode: 0
 exp_time: 2000
