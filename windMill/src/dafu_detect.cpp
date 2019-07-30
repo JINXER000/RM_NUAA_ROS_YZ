@@ -1,7 +1,11 @@
 #include "dafu_detect.h"
 
 
-
+///
+/// \brief Dafu_Detecor::Dafu_Detecor
+/// \param _ap
+/// \param _cp
+///
 Dafu_Detecor::Dafu_Detecor(AlgoriParam &_ap,CamParams &_cp ):ap(_ap),cp(_cp)
 {
   Camera_fx=cp.fx;
@@ -13,7 +17,13 @@ Dafu_Detecor::Dafu_Detecor(AlgoriParam &_ap,CamParams &_cp ):ap(_ap),cp(_cp)
   std::cout<<"gray threthold is"<<gray_threthold<<std::endl;
 }
 
-
+///
+/// \brief Dafu_Detecor::bgr2binary
+/// \param srcImg
+/// \param img_out
+/// \param method
+/// \return
+///
 int Dafu_Detecor::bgr2binary(Mat &srcImg, Mat &img_out,int method)
 {
   if (srcImg.empty())
@@ -44,7 +54,13 @@ int Dafu_Detecor::bgr2binary(Mat &srcImg, Mat &img_out,int method)
     return -1;
   return 0;
 }
-
+///
+/// \brief Dafu_Detecor::myFilter
+/// \param InputPixel
+/// \param InterframeError
+/// \param FilterLength
+/// \return
+///
 Point2f Dafu_Detecor::myFilter(Point2f InputPixel,float InterframeError,int FilterLength )
 {
   static int jump_cnt=0;
@@ -92,7 +108,12 @@ Point2f Dafu_Detecor::myFilter(Point2f InputPixel,float InterframeError,int Filt
   }
 
 }
-
+///
+/// \brief Dafu_Detecor::predcit
+/// \param angle_degree
+/// \param frame
+/// \return
+///
 Point2f  Dafu_Detecor::predcit(float angle_degree,Mat frame) //calculate  predcit
 {
   float theta=angle_degree/180*3.14;
@@ -108,7 +129,13 @@ Point2f  Dafu_Detecor::predcit(float angle_degree,Mat frame) //calculate  predci
 
   return pred;
 }
-
+///
+/// \brief Dafu_Detecor::dafu_ZSZS
+/// \param srcImg
+/// \param is_red
+/// \param is_cw
+/// \return
+///
 Point Dafu_Detecor::dafu_ZSZS(Mat &srcImg, bool is_red,bool is_cw)
 {
   bgr2binary(srcImg,threshold_frame,1);
@@ -407,6 +434,13 @@ Point Dafu_Detecor::dafu_ZSZS(Mat &srcImg, bool is_red,bool is_cw)
 
 
 //}
+
+///
+/// \brief Dafu_Detecor::DetectDafuArmor
+/// \param grayImage
+/// \param dstImage
+/// \param is_cw
+///
 void Dafu_Detecor::DetectDafuArmor(Mat &grayImage, Mat &dstImage,bool is_cw)
 {
   Point2f DafuCenterPitchYawError;               //大符中心坐标
@@ -678,6 +712,12 @@ void Dafu_Detecor::DetectDafuArmor(Mat &grayImage, Mat &dstImage,bool is_cw)
 
 
 //计算云台需要转的Yaw和Pitch使得摄像头的中轴线到指定点
+///
+/// \brief Dafu_Detecor::CaculatePitchYawError
+/// \param Pixel_x
+/// \param Pixel_y
+/// \return
+///
 Point2f Dafu_Detecor::CaculatePitchYawError(float Pixel_x, float Pixel_y)
 {
   float PitchAngle = 0;
@@ -694,7 +734,12 @@ Point2f Dafu_Detecor::CaculatePitchYawError(float Pixel_x, float Pixel_y)
 }
 
 
-
+///
+/// \brief Dafu_Detecor::GetPixelLength
+/// \param PixelPointO
+/// \param PixelPointA
+/// \return
+///
 float Dafu_Detecor::GetPixelLength(Point PixelPointO, Point PixelPointA)
 {
   float PixelLength;
@@ -714,6 +759,12 @@ double Dafu_Detecor::CvtRealLenghth2PixelLenghth(double RealLenghth_mm, double D
 }
 
 //Distance: the distance of camera and object
+///
+/// \brief Dafu_Detecor::CvtPixelLenghth2RealLenghth
+/// \param PixelLenghth
+/// \param Distance_mm
+/// \return
+///
 double Dafu_Detecor::CvtPixelLenghth2RealLenghth(double PixelLenghth, double Distance_mm)
 {
   double RealLenghth = 0;
@@ -749,7 +800,12 @@ void Dafu_Detecor::CalculateShootingPitch(Point2f CurrentPixel, Point2f &TargetP
 
 }
 
-
+///
+/// \brief Dafu_Detecor::GetROI
+/// \param rotate_recte_rect
+/// \param grayImage
+/// \return
+///
 Mat Dafu_Detecor::GetROI(RotatedRect rotate_recte_rect, Mat &grayImage)
 {
   Mat ROI;
@@ -790,7 +846,14 @@ Mat Dafu_Detecor::GetROI(RotatedRect rotate_recte_rect, Mat &grayImage)
 
   return ROI;
 }
-
+///
+/// \brief Dafu_Detecor::PointRotate
+/// \param angle_degree
+/// \param frame
+/// \param Rotatecenter
+/// \param RotatePoint
+/// \return
+///
 Point2f Dafu_Detecor::PointRotate(float angle_degree, Mat frame,Point2f Rotatecenter,Point2f RotatePoint)
 {
     float theta = angle_degree / 180 * 3.14;

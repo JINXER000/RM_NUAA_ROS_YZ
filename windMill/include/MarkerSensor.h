@@ -120,7 +120,7 @@ public :
   };
   MarkSensor(AlgoriParam &ap_,CamParams &cp_, MarkerParams &mp_);
 	//MarkSensor(const string & calibration, const string & config, const string & cascade);
-  int ProcessFrameLEDXYZ(const Mat & img, float & angX, float & angY, float & Z, int &type, int &pix_x, int &pix_y);
+  int ProcessFrameLEDXYZ(const Mat & img, float & angX, float & angY, float & Z,  int &pix_x, int &pix_y);
 	int DetectLEDMarker(const Mat &img, Marker &res_marker);
 	int TrackLEDMarker(const Mat &img, Marker &res_marker);
 
@@ -128,9 +128,8 @@ public :
 	int PCALEDStrip(vector<cv::Point> &contour, RotRect &LED);
 	float ComputeLengthAlongDir(vector<cv::Point> &contour, cv::Point2f &dir);
 	int paraDistance(RotRect &LED1, RotRect &LED2);
-	int Kalman();
   int tgt_selector(vector<Marker> &markers);
-	int GammaCorrect();
+
   int calcDepth(Marker &marker);
   int judge_motion();
   int bgr2binary(Mat &srcImg, Mat &img_out,int method);

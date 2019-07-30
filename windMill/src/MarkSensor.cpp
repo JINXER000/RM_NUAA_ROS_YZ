@@ -6,6 +6,7 @@ using namespace cv;
 using namespace std;
 
 int begin_time[10];
+
 int Marker::ComputeKeyPoints()
 {
   int is_dir0_down=(LEDs[0].dir.dot(Point2f(0,1)))>0?1:-1;
@@ -38,7 +39,7 @@ int MarkSensor::calcDepth(Marker &res_marker)
 
   vector<Point3f> objectPoints;
 
-  if(type == 1)//大装甲
+  if(type == 1)//big armor
   {
     objectPoints.push_back(Point3f(-12.5, -3, 0.0));
     objectPoints.push_back(Point3f(12.5, -3, 0.0));
@@ -46,7 +47,7 @@ int MarkSensor::calcDepth(Marker &res_marker)
     objectPoints.push_back(Point3f(12.5, 3, 0.0));
   }
 
-  else//小装甲 或 没检测出型号
+  else//small or unknown
   {
     objectPoints.push_back(Point3f(-6.4, -2.6, 0.0));
     objectPoints.push_back(Point3f(6.4, -2.6, 0.0));
@@ -85,6 +86,13 @@ int MarkSensor::calcDepth(Marker &res_marker)
 
   return res_marker.depth;
 }
+///
+/// \brief MarkSensor::MarkSensor
+/// structor, initialize some varibles
+/// \param ap_
+/// \param cp_
+/// \param mp_
+///
 MarkSensor::MarkSensor(AlgoriParam &ap_,CamParams &cp_,MarkerParams &mp_):
   ap(ap_),cp(cp_),mp(mp_)
 {
@@ -93,6 +101,15 @@ MarkSensor::MarkSensor(AlgoriParam &ap_,CamParams &cp_,MarkerParams &mp_):
   jump_filter=new FilterOutStep;
 
 }
+///
+/// \brief MarkSensor::bgr2binary
+/// preprocess
+/// \param srcImg
+/// \param img_out
+/// \param method
+/// 2 options
+/// \return
+///
 int MarkSensor::bgr2binary(Mat &srcImg, Mat &img_out,int method)
 {
   if (srcImg.empty())
@@ -116,6 +133,7 @@ int MarkSensor::bgr2binary(Mat &srcImg, Mat &img_out,int method)
     threshold(mid_chn_img, img_out, 60, 255, CV_THRESH_BINARY);
   }else if(method==2)
   {
+    //method 2: 3 channel threthold
     cv::inRange(srcImg,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),
                 cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),img_out);
 
@@ -123,7 +141,13 @@ int MarkSensor::bgr2binary(Mat &srcImg, Mat &img_out,int method)
     return -1;
   return 0;
 }
-
+///
+/// \brief MarkSensor::PCALEDStrip
+/// convert contours to LED struct
+/// \param contour
+/// \param LED
+/// \return 0 if success
+///
 int MarkSensor::PCALEDStrip(vector<cv::Point> &contour, RotRect &LED)
 {
   int sz = static_cast<int>(contour.size());
@@ -153,6 +177,14 @@ int MarkSensor::PCALEDStrip(vector<cv::Point> &contour, RotRect &LED)
   return 0;
 
 }
+///
+/// \brief MarkSensor::ComputeLengthAlongDir
+/// length of led
+/// \param contour
+/// \param dir
+/// direction of led
+/// \return
+///
 float MarkSensor::ComputeLengthAlongDir(vector<cv::Point> &contour, cv::Point2f &dir)
 {
   float max_range = -999999;
@@ -164,7 +196,14 @@ float MarkSensor::ComputeLengthAlongDir(vector<cv::Point> &contour, cv::Point2f 
   }
   return (max_range - min_range);
 }
-int MarkSensor::paraDistance(RotRect &LED1, RotRect &LED2)  //if is parallel
+///
+/// \brief MarkSensor::paraDistance
+/// calculate distance between 2 parallel lines
+/// \param LED1
+/// \param LED2
+/// \return
+///
+int MarkSensor::paraDistance(RotRect &LED1, RotRect &LED2)
 {
   float distance = 0;
   float tgt_theta = LED1.dir.y / LED1.dir.x;
@@ -173,6 +212,13 @@ int MarkSensor::paraDistance(RotRect &LED1, RotRect &LED2)  //if is parallel
   distance = fabs((LED1.center.x - cx2_para)*sin(theta));
   return distance;
 }
+///
+/// \brief MarkSensor::tgt_selector
+/// when multiple armors detected, select which to shoot.
+/// detecting is different from just tracking.
+/// \param markers
+/// \return
+///
 int MarkSensor::tgt_selector(vector<Marker> &markers)
 {
   int res_idx=0;
@@ -199,11 +245,6 @@ int MarkSensor::tgt_selector(vector<Marker> &markers)
     float dist2c = norm(camera_c - marker_c);
 
     float decide_p1=MAX(1-0.002*dist2c,0);
-    //    if (dist2c < minDist)
-    //    {
-    //      minDist = dist2c;
-    //      res_idx = i;
-    //    }
 
     if(status!=STATUS_DETECTING)
     {
@@ -217,7 +258,6 @@ int MarkSensor::tgt_selector(vector<Marker> &markers)
       float decide_p2=MIN(0.001*area+0.1, 1);
 
       // third param: leaky angle of armor
-      //    float leaky_angle=fabs((markers[i].LEDs[0].center.y -markers[i].LEDs[1].center.y)/markers[i].bbox.width);
       float leaky_angle=MIN(markers[i].LEDs[0].width/markers[i].LEDs[1].width,markers[i].LEDs[1].width/markers[i].LEDs[0].width);
       float decide_p3;
       if(markers[i].armor_type==Marker::SMALL)
@@ -231,12 +271,7 @@ int MarkSensor::tgt_selector(vector<Marker> &markers)
       markers[i].decision_points=0.5*decide_p1+decide_p2+decide_p3;
 
     }
-
-
-
     //draw all the markers
-
-
 
     if (mp.ifShow&&status==STATUS_DETECTING)
 
@@ -258,7 +293,13 @@ int MarkSensor::tgt_selector(vector<Marker> &markers)
   return res_idx;
 
 }
-
+///
+/// \brief MarkSensor::GetLEDMarker
+/// find res_marker in roi_mask.
+/// \param roi_mask
+/// \param res_marker
+/// \return
+///
 int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 {
 
@@ -308,7 +349,6 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 
   int LED_sz = LEDs.size();
   vector<bool> matched(LED_sz, false);
-  //vector < vector<bool>>  matched2d(LED_sz);
   for (size_t i = 0; i < LED_sz; ++i) {
     if (matched[i]) continue;
     for (size_t j = i + 1; j < LED_sz; ++j) {
@@ -393,19 +433,22 @@ int MarkSensor::GetLEDMarker(cv::Mat &roi_mask, Marker &res_marker)
 
   return 0;
 }
-
+///
+/// \brief MarkSensor::DetectLEDMarker
+/// detect all armors and choose best
+/// \param img
+/// \param res_marker
+/// \return
+///
 int MarkSensor::DetectLEDMarker(const Mat &img, Marker &res_marker)
 {
-  //img.copyTo(img_bgr);
   //cvtColor(img_bgr, img_hsv, CV_BGR2HSV);
   img.copyTo(img_hsv);
   /*actually we use bgr*/
   begin_time[4]=cv::getTickCount();
   bgr2binary(img_hsv,led_mask,1);
-//  cv::inRange(img_hsv,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),led_mask);
   std::cout <<" TO BINARY : "<< float( cv::getTickCount() - begin_time[4] )/cv::getTickFrequency()<<std::endl;
 
-  //Mat led_erode;
     Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
     morphologyEx(led_mask, led_mask, MORPH_CLOSE, element, Point(-1, -1), 1);
 
@@ -413,12 +456,17 @@ int MarkSensor::DetectLEDMarker(const Mat &img, Marker &res_marker)
   if(!is_detected)
   {
 //    dbg_save(img,ap.dbg_path,status);
-
   }
   return is_detected;
 
 }
-
+///
+/// \brief MarkSensor::TrackLEDMarker
+/// track target in small img patch
+/// \param img
+/// \param res_marker
+/// \return
+///
 int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
 {
   Rect &box = res_marker.bbox;
@@ -447,7 +495,6 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
   begin_time[4]=cv::getTickCount();
   bgr2binary(ROI_bgr,ROI_led_mask,1);
 
-//  cv::inRange(ROI_bgr,cv::Scalar(ap.ch1_min,ap.ch2_min,ap.ch3_min),cv::Scalar(ap.ch1_max,ap.ch2_max,ap.ch3_max),ROI_led_mask);
   std::cout <<" ROI TO BINARY : "<< float( cv::getTickCount() - begin_time[4] )/cv::getTickFrequency()<<std::endl;
 
   /// Get Marker
@@ -456,7 +503,7 @@ int MarkSensor::TrackLEDMarker(const Mat &img, Marker &res_marker)
 //    dbg_save(ROI_bgr,ap.dbg_path,status);
     return -1;
   }
-
+// add coordinate bias
   res_marker.LEDs[0].center.x += ROI.x;
   res_marker.LEDs[0].center.y += ROI.y;
   res_marker.LEDs[1].center.x += ROI.x;
@@ -564,8 +611,18 @@ int MarkSensor::judge_motion()
 
   return 0;
 }
-
-int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, float &Z, int &type,int &pix_x,int &pix_y)
+///
+/// \brief MarkSensor::ProcessFrameLEDXYZ
+/// \param img: input src
+/// \param angX: yaw error
+/// \param angY: pitch error
+/// \param Z: target depth
+/// \param pix_x: x error
+/// \param pix_y: y error
+/// \return :-1  fail
+///
+///
+int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, float &Z, int &pix_x,int &pix_y)
 {
   begin_time[6]=cv::getTickCount();
   img.copyTo(img_show);
@@ -589,7 +646,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
       status = STATUS_TRACKLOST0;
       printf("Track No target!\n");
       track_fail_cnt[0]=0;
-      //      marker=Marker();
+
 //      return -1;
     }
   }else if(status==STATUS_TRACKLOST0)
@@ -603,14 +660,13 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
 
       printf("Track 0 No target!\n");
       track_fail_cnt[0]++;
-      if(track_fail_cnt[0]>10)
+      if(track_fail_cnt[0]>10)   // you can modify this constant
       {
         status=STATUS_TRACKLOST1;
         printf("enlarge ROI!");
         track_fail_cnt[0]=0;
         track_fail_cnt[1]=0;
       }
-      //      marker=Marker();
       //return -1;
     }
 
@@ -624,7 +680,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
     else {
       printf("Track 1 No target!\n");
       track_fail_cnt[1]++;
-      if(track_fail_cnt[1]>20)
+      if(track_fail_cnt[1]>20)// you can modify this constant
       {
         status=STATUS_TRACKLOST2;
         printf("ROI enlarge again!");
@@ -659,10 +715,10 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   }
 
   ///update pix position
+  ///  this filter is important, coz the leds on armors will blink if pressed by bullet
   if(status==STATUS_TRACKING)
   {
     new_target = (marker.LEDs[0].center + marker.LEDs[1].center)*0.5f;
-//    target=jump_filter->Filter(new_target,marker.bbox.width,10);
     jump_filter->setInitPix(new_target);
     target=new_target;
   }else
@@ -671,7 +727,6 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
     target=jump_filter->Filter(new_target,10000,20);
   }
 
-  //filter
 
 
 
@@ -688,7 +743,7 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
     circle(img_show,target,4,Scalar(20,20,255),3);
   }
   //tell if it is time to shoot
-  float extend_yaw;
+  float extend_yaw; //  you will modify this var on different machines
   if(marker.armor_type==Marker::BIG)
   {
       extend_yaw=0.6;
@@ -728,19 +783,17 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
     if(got_trans)
     {
       //camera frame
-//      tf::Vector3 pos_t2c;
       pos_t2c.m_floats[0]=depth;
       pos_t2c.m_floats[1]=-tanX*depth;
       pos_t2c.m_floats[2]=-tanY*depth;
       //world frame (N-W-U)
 
-//      tf::Vector3 pos_t2w;
       pos_t2w=trans*pos_t2c;
     }
     std::cout <<" calculate depth : "<< float( cv::getTickCount() - begin_time[5] )/cv::getTickFrequency()<<std::endl;
 
   }
-  /// analyze motion---do not use for now
+  /// analyze motion---do not use, param not tuned
   if(mp.if_analyze_motion)
   {
     if(status!=STATUS_DETECTING)
@@ -767,7 +820,17 @@ int MarkSensor::ProcessFrameLEDXYZ(const Mat &img, float &angX, float &angY, flo
   return 0;
 }
 
-
+///
+/// \brief HaarD::Detect_track   haar cascade method. It is obsolete.
+/// \param img
+/// \param X
+/// \param Y
+/// \param Z
+/// \param type
+/// \param pix_x
+/// \param pix_y
+/// \return
+///
 
 bool HaarD::Detect_track( const Mat & img, float & X, float & Y, float & Z, int &type, int &pix_x, int &pix_y)
 {
@@ -902,14 +965,4 @@ vector<Rect> HaarD::color_filter(Mat frame, vector<Rect> boards, bool color_flag
   }
   //cout << results.size() << endl;
   return results;
-}
-
-int MarkSensor::Kalman()
-{
-  return 0;
-}
-
-int MarkSensor::GammaCorrect()
-{
-  return 0;
 }

@@ -1,3 +1,4 @@
+/// Please see camera development documentation.
 
 #include <CameraDefine.h>
 #include <zconf.h>
@@ -200,7 +201,7 @@ int MVCamera::SetLargeResolution(bool if_large_resolution)
 
     return 0;
 }
-
+// white balance
 int MVCamera::SetWBMode(bool auto_wb)
 {
     int status = CameraSetWbMode(hCamera, auto_wb);
@@ -267,7 +268,7 @@ int MVCamera::Play()
     //    std::thread thread1(MVCamera::Read);
     //    thread1.detach();
 }
-
+// do not use
 int MVCamera::Read()
 {
     while (!stopped) {
@@ -296,16 +297,25 @@ int MVCamera::Set_fps(int fps_mode)
   }else
   {
     printf("CAMERA SET FPS MODE FAILED! ERROR CODE: %d\n", status);
-    return -1;
+    return -1;// the problem that camera failed to grab img often occurs when in high speed mode(USB3)
+
   }
   CameraGetCapability(hCamera,&tCapability);
 }
-
+///
+/// \brief MVCamera::GetFrame_B
+/// \param frame
+/// \param is_color
+/// true if we want bgr img
+/// \return
+///
 int MVCamera::GetFrame_B(Mat &frame,bool is_color)
 {
     if (!stopped) {
 
         if (CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 1000) == CAMERA_STATUS_SUCCESS) {
+          // the problem that camera failed to grab img often occurs when in high speed mode(USB3.0)
+
             if (frame.cols != sFrameInfo.iWidth || frame.rows != sFrameInfo.iHeight) {
                 printf("GetFrame: resize frame !\n");
                 if(is_color)
@@ -320,6 +330,7 @@ int MVCamera::GetFrame_B(Mat &frame,bool is_color)
 
             if (iplImage)
             {
+              // delete old one
                 cvReleaseImageHeader(&iplImage);
             }
             iplImage = cvCreateImageHeader(cvSize(sFrameInfo.iWidth,sFrameInfo.iHeight),IPL_DEPTH_8U,1);
@@ -330,19 +341,13 @@ int MVCamera::GetFrame_B(Mat &frame,bool is_color)
 
 
             CameraReleaseImageBuffer(hCamera, pbyBuffer);
-        }else{
-            if(started)
-            {
-                // Uninit();
-                // Init();
-                ROS_ERROR("MV CAM DRIVE FIAIL");
-                signal(SIGINT, MySigintHandler);
-            }
         }
+
+
     }
 
 }
-
+// do not use
 int MVCamera::GetFrame(Mat &frame,bool is_color)
 {
     //init iplImage

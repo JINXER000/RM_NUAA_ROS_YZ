@@ -4,6 +4,7 @@
 
 void callback(my_msgs::tutorialsConfig &config, uint32_t level)
 {
+  // for debug
     ROS_INFO("Reconfigure Request: %d %f %s %s %d",
               config.int_param, config.double_param,
               config.str_param.c_str(),

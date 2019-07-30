@@ -1,14 +1,8 @@
-/****************************************
-*    @author  : LD
-*    @date    : 201780124
-*    @ROS     : Kinetic
-*    @Version : 1.0.0
-****************************************/
 
 #include "ros/ros.h"
 #include <std_msgs/Empty.h>
 #include <std_msgs/String.h>
-#include <serial/serial.h>  //ROS已经内置了的串口包
+#include <serial/serial.h>
 #include <std_msgs/String.h>
 #include "Serial_common_config.h"
 #include "iomanip"
@@ -37,27 +31,7 @@ void Data_disintegrate(unsigned int Data, unsigned char *LData,
     *LData = Data & 0XFF;          // 0xFF = 1111 1111
     *HData = (Data & 0xFF00) >> 8; // 0xFF00 = 1111 1111 0000 0000
 }
-//
-#ifdef INFRANTRY_MODE
-void write_callback(const serial_common::Infantry::ConstPtr& msg)
-{
-    uint8_t Buffer[10];
-    Buffer[0] = msg-> kaishi;
-    Buffer[1] = msg-> panduan;
-    Buffer[2] = msg-> xlocation&0xff;
-    Buffer[3] = msg-> xlocation>>8;
-    Buffer[4] = msg-> ylocation&0xff;
-    Buffer[5] = msg-> ylocation>>8;
-    Buffer[6] = msg-> shijie_z&0xff;
-    Buffer[7] = msg-> shijie_z>>8;
-    Buffer[8] = msg-> fankui1;
-    Buffer[9] = msg-> fankui2;
 
-    ser.write(Buffer,10);   //发送串口数据
-}
-#endif
-
-#ifdef GUARD_MODE
 void write_callback(const serial_common::Guard::ConstPtr& msg)
 {
     uint8_t Buffer[DATA_LEN];
@@ -75,7 +49,7 @@ void write_callback(const serial_common::Guard::ConstPtr& msg)
     ser.write(Buffer,DATA_LEN);   //发送串口数据
     printf("got location:: (%d,  %d )\n",msg->xlocation,msg->ylocation);
 }
-#endif
+
 void receive_process(std::string &read_buffer)
 {
   if(read_buffer[0]!=0XFF)
@@ -104,6 +78,7 @@ int main (int argc, char** argv)
 #endif
 
     //设置串口属性，并打开串口
+
     const char *usb_ttl=getenv("usb_ttl");
     if(usb_ttl==NULL)
     {
@@ -147,7 +122,7 @@ int main (int argc, char** argv)
             std_msgs::String result;
             result.data = ser.read(ser.available());
             std::string read_buffer=result.data.c_str();
-
+            // To get data from stm32, you need further process on read_buffer. Not finished.
             read_pub.publish(result);
         }
 

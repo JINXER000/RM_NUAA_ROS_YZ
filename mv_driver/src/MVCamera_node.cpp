@@ -76,7 +76,11 @@ public:
         mv_driver->Stop();
         mv_driver->Uninit();
     }
-
+    ///
+    /// \brief get_exp
+    /// get exposure time
+    /// \param exp_time
+    ///
     void get_exp(const std_msgs::Int16ConstPtr &exp_time)
     {
         if(exposure_!=exp_time->data)
@@ -112,6 +116,11 @@ public:
         ss << i;
         return ss.str();
     }
+    ///
+    /// \brief take_and_send_image
+    /// use camera API in MVCamera.cpp
+    /// \return
+    ///
     bool take_and_send_image()
     {
         // grab the image

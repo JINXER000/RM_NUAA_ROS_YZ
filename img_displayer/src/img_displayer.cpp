@@ -1,8 +1,8 @@
 /*************************************************************************
   > File Name: video_pub.cpp
-  > Author:
+  > Author: CYZ
   > Mail:
-  > Created Time: Sun 24 Feb 2019 05:08:34 PM
+  > Function: subscribe output img from windmill node and show them
  ************************************************************************/
 
 #include<iostream>
