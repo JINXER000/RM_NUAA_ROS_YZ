@@ -1,5 +1,5 @@
 cd $(your rootfolder)$/ros_ws
-sudo chmod 777 src/RM_NUAA_ROS_YZ/ros_dynamic_test/
+sudo chmod 777 src/RM_NUAA_ROS_YZ/ros_dynamic_test/cfg/dyn_param.cfg
 catkin_make --pkg serial_common
 catkin_make --pkg ros_dynamic_test
 catkin_make

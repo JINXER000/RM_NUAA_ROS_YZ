@@ -1,8 +1,8 @@
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
-#include "ros_dynamic_test/tutorialsConfig.h"
+#include "ros_dynamic_test/dyn_paramConfig.h"
 
-void callback(my_msgs::tutorialsConfig &config, uint32_t level)
+void callback(my_msgs::dyn_paramConfig &config, uint32_t level)
 {
   // for debug
     ROS_INFO("Reconfigure Request: %d %f %s %s %d",
@@ -16,8 +16,8 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "dynamic_srv");
 
-    dynamic_reconfigure::Server<my_msgs::tutorialsConfig> server;
-    dynamic_reconfigure::Server<my_msgs::tutorialsConfig>::CallbackType f;
+    dynamic_reconfigure::Server<my_msgs::dyn_paramConfig> server;
+    dynamic_reconfigure::Server<my_msgs::dyn_paramConfig>::CallbackType f;
 
     f = boost::bind(&callback, _1, _2);
     server.setCallback(f);

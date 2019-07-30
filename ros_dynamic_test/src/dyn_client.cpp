@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include "client.h"
-#include "ros_dynamic_test/tutorialsConfig.h"
+#include "ros_dynamic_test/dyn_paramConfig.h"
 #include <boost/function.hpp>
 #include <string>
 #include <iostream>
@@ -12,7 +12,7 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int16.h>
 #include "ros_dynamic_test/dyn_cfg.h"
-typedef boost::function<void(const my_msgs::tutorialsConfig &)> CallBack;
+typedef boost::function<void(const my_msgs::dyn_paramConfig &)> CallBack;
 ros_dynamic_test::dyn_cfg cfg_msg;
 ros::Publisher dyn_pub;
 ros::Publisher exp_time_pub;
@@ -29,7 +29,7 @@ std_msgs::Bool is_rcd_msg;
 /// 3. publish it if it is not in cfg_msg
 /// \param data
 ///
-void dynCallBack(const my_msgs::tutorialsConfig &data)
+void dynCallBack(const my_msgs::dyn_paramConfig &data)
 {
     ROS_INFO("int: %d, double: %f, bool: %d, string: %s", data.int_param, data.double_param,
              data.bool_param, data.str_param.c_str());
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
  is_rcd_pub=node_.advertise<std_msgs::Bool>("/mv_param/is_record",33);
 
 
-    dynamic_reconfigure::Client<my_msgs::tutorialsConfig> client("dynamic_srv", dynCallBack);
+    dynamic_reconfigure::Client<my_msgs::dyn_paramConfig> client("dynamic_srv", dynCallBack);
 
 
     ros::Rate loop_rate(10) ;
