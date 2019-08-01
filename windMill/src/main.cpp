@@ -30,7 +30,7 @@ float angX = 0, angY = 0, Z = 0;
 // initialize objects as null
 MarkSensor *markSensor=NULL;
 windMill *wind_mill=NULL;
-Dafu_Detecor *dafu_detector=NULL;
+Dafu_Detector *dafu_detector=NULL;
 serial_common::Guard tgt_pos;
 //flags
 bool is_windMill_mode=false,is_cw=false;//change dafu_zimiao
@@ -126,7 +126,7 @@ public:
     markSensor=new MarkSensor(ap,cp,mp);
     /// dafu, you can choose one of them
     wind_mill=new windMill(!ap.is_red,is_cw);
-    dafu_detector=new Dafu_Detecor(ap,cp);
+    dafu_detector=new Dafu_Detector(ap,cp);
 
     // Subscrive to input video feed and publish output video feed
 

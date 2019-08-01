@@ -20,10 +20,10 @@
 using namespace std;
 using namespace cv;
 
-class Dafu_Detecor
+class Dafu_Detector
 {
 public:
-  Dafu_Detecor(AlgoriParam &_ap,CamParams &_cp );
+  Dafu_Detector(AlgoriParam &_ap,CamParams &_cp );
   //计算云台需要转的Yaw和Pitch使得摄像头的中轴线到指定点
 
   double CvtRealLenghth2PixelLenghth(double RealLenghth_mm, double Distance_mm);
